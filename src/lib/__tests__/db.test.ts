@@ -139,15 +139,16 @@ describe("db queries", () => {
     });
   });
 
-  describe("getMonthlyTotals", () => {
-    it("returns one row per month ordered ASC", () => {
+  describe("getMonthlyTotals (billing periods start on adjusted 25th)", () => {
+    it("returns one row per billing period ordered ASC", () => {
       const rows = getMonthlyTotals(db, "all");
-      // mock data spans 2024-06, 2024-07, 2025-01, 2025-03
+      // All test dates are before the 25th of their month so billing periods
+      // align with calendar months: 2024-06, 2024-07, 2025-01, 2025-03
       expect(rows.length).toBe(4);
       expect(rows.map((r) => r.month)).toEqual(["2024-06", "2024-07", "2025-01", "2025-03"]);
     });
 
-    it("correctly pivots income and expense per month", () => {
+    it("correctly pivots income and expense per billing period", () => {
       const rows = getMonthlyTotals(db, "all");
       const jun24 = rows.find((r) => r.month === "2024-06")!;
       expect(jun24.income).toBe(5000000);
@@ -156,14 +157,13 @@ describe("db queries", () => {
 
       const mar25 = rows.find((r) => r.month === "2025-03")!;
       expect(mar25.income).toBe(0);
-      expect(mar25.expense).toBe(75000 + 20000); // Dinner + Bus (transfer excluded)
+      expect(mar25.expense).toBe(75000 + 20000);
       expect(mar25.balance).toBe(-(75000 + 20000));
     });
 
     it("excludes transfer rows (do_type=3)", () => {
       const rows = getMonthlyTotals(db, "all");
       const mar25 = rows.find((r) => r.month === "2025-03")!;
-      // transfer of 100000 must not appear in expense
       expect(mar25.expense).toBe(95000);
     });
 
@@ -176,13 +176,31 @@ describe("db queries", () => {
     it("filters to last_year (2025)", () => {
       const rows = getMonthlyTotals(db, "last_year");
       expect(rows.every((r) => r.month.startsWith("2025-"))).toBe(true);
-      expect(rows.length).toBe(2); // Jan + Mar
+      expect(rows.length).toBe(2);
     });
 
     it("returns empty array when no data matches filter", () => {
-      // this_year = 2026, no 2026 data in mock
       const rows = getMonthlyTotals(db, "this_year");
       expect(rows).toEqual([]);
+    });
+
+    it("assigns a date on or after the adjusted 25th to the next billing period", async () => {
+      // Jan 25, 2025 is a Saturday → adjusted start = Jan 24 (Friday)
+      // Transactions on Jan 24 and Jan 25 should land in Feb 2025
+      // Transactions on Jan 23 should land in Jan 2025
+      const SQL = await initSqlJs();
+      const boundaryDb = new SQL.Database();
+      boundaryDb.run(`
+        CREATE TABLE INOUTCOME (wdate TEXT, do_type INTEGER, AMOUNT_ACCOUNT NUMERIC, currencyUid TEXT, ctgUid TEXT, ZCONTENT TEXT);
+        INSERT INTO INOUTCOME VALUES ('2025-01-23', 1, 1000, 'IDR_IDR', '1', 'before start');
+        INSERT INTO INOUTCOME VALUES ('2025-01-24', 1, 2000, 'IDR_IDR', '1', 'on adjusted start');
+        INSERT INTO INOUTCOME VALUES ('2025-01-25', 1, 3000, 'IDR_IDR', '1', 'after adjusted start');
+      `);
+      const rows = getMonthlyTotals(boundaryDb, "all");
+      const jan = rows.find((r) => r.month === "2025-01");
+      const feb = rows.find((r) => r.month === "2025-02");
+      expect(jan?.expense).toBe(1000);   // only the Jan 23 transaction
+      expect(feb?.expense).toBe(5000);   // Jan 24 + Jan 25 roll into Feb billing period
     });
   });
 });
