@@ -30,10 +30,10 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
   // Shared colgroup — must be identical in all three tables
   const Cols = () => (
     <colgroup>
-      <col style={{ width: "40%" }} />
+      <col style={{ width: "44%" }} />
       <col style={{ width: "12%" }} />
-      <col style={{ width: "24%" }} />
-      <col style={{ width: "24%" }} />
+      <col style={{ width: "28%" }} />
+      <col style={{ width: "16%" }} />
     </colgroup>
   );
 
@@ -78,7 +78,7 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
                     {row.categoryName}
                   </td>
                   <td className="px-4 py-2.5 text-right text-gray-500">{row.count}</td>
-                  <td className="px-4 py-2.5 text-right text-gray-900 font-medium truncate">
+                  <td className="px-4 py-2.5 text-right text-gray-900 font-medium">
                     {currency}{row.total.toLocaleString("id-ID")}
                   </td>
                   <td className="px-4 py-2.5 text-right text-gray-500 tabular-nums">
@@ -100,7 +100,7 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
             <td className="px-4 py-2.5 text-right text-gray-500">
               {data.reduce((s, c) => s + c.count, 0)}
             </td>
-            <td className="px-4 py-2.5 text-right truncate">
+            <td className="px-4 py-2.5 text-right">
               {currency}{total.toLocaleString("id-ID")}
             </td>
             <td />
