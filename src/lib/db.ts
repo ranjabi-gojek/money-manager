@@ -107,7 +107,7 @@ export function getSummary(db: Database, filter: TimeFilter = "all"): Summary {
 
   const sumQuery = (type: number) => {
     const { where, params } = buildWhereClause(range, [`do_type = ${type}`]);
-    const sql = `SELECT SUM(AMOUNT_ACCOUNT), currencyUid FROM INOUTCOME ${where} GROUP BY currencyUid LIMIT 1`;
+    const sql = `SELECT SUM(AMOUNT_ACCOUNT), currencyUid FROM INOUTCOME i ${where} GROUP BY currencyUid LIMIT 1`;
     const result = db.exec(sql, params);
     if (!result.length || !result[0].values.length) return { amount: 0, currencyId: "" };
     const row = result[0].values[0];
