@@ -127,6 +127,16 @@ export default function TransactionList({ transactions, currency }: TransactionL
     setPage(1);
   };
 
+  const isFiltered = search !== "" || sortDir !== null || categoryFilter.selected.size > 0 || pageSize !== 10;
+
+  const resetFilters = () => {
+    setSearch("");
+    setSortDir(null);
+    setCategoryFilter(DEFAULT_FILTER);
+    setPageSize(10);
+    setPage(1);
+  };
+
   const SortIcon = sortDir === "desc" ? ArrowDown : sortDir === "asc" ? ArrowUp : ArrowUpDown;
 
   return (
@@ -154,6 +164,14 @@ export default function TransactionList({ transactions, currency }: TransactionL
               className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"
             />
           </div>
+          {isFiltered && (
+            <button
+              onClick={resetFilters}
+              className="px-3 py-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            >
+              Reset filters
+            </button>
+          )}
         </div>
       </div>
 

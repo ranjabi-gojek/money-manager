@@ -80,6 +80,57 @@ describe("TransactionList", () => {
     expect(expenseCell).toHaveClass("text-red-500");
   });
 
+  describe("reset filters", () => {
+    it("reset button is hidden when no filters are active", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      expect(screen.queryByRole("button", { name: /reset filters/i })).not.toBeInTheDocument();
+    });
+
+    it("reset button appears when page size differs from default", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      fireEvent.change(screen.getByLabelText(/Rows per page/i), { target: { value: "20" } });
+      expect(screen.getByRole("button", { name: /reset filters/i })).toBeInTheDocument();
+    });
+
+    it("reset button appears when search is active", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      fireEvent.change(screen.getByPlaceholderText(/Search note or category/i), { target: { value: "grab" } });
+      expect(screen.getByRole("button", { name: /reset filters/i })).toBeInTheDocument();
+    });
+
+    it("reset button appears when sort is active", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      fireEvent.click(screen.getByRole("button", { name: /amount/i }));
+      expect(screen.getByRole("button", { name: /reset filters/i })).toBeInTheDocument();
+    });
+
+    it("reset button appears when category filter is active", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      fireEvent.click(screen.getByText("Filter categories"));
+      fireEvent.click(screen.getByLabelText("Food"));
+      expect(screen.getByRole("button", { name: /reset filters/i })).toBeInTheDocument();
+    });
+
+    it("clicking reset clears search, sort, page size, and category filter", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      // Apply multiple filters
+      fireEvent.change(screen.getByPlaceholderText(/Search note or category/i), { target: { value: "grab" } });
+      fireEvent.click(screen.getByRole("button", { name: /amount/i }));
+      fireEvent.change(screen.getByLabelText(/Rows per page/i), { target: { value: "50" } });
+      // Reset
+      fireEvent.click(screen.getByRole("button", { name: /reset filters/i }));
+      // All 3 transactions visible again
+      expect(screen.getByText("(3)")).toBeInTheDocument();
+      expect(screen.getByText("lunch")).toBeInTheDocument();
+      expect(screen.getByText("grab")).toBeInTheDocument();
+      expect(screen.getByText("monthly salary")).toBeInTheDocument();
+      // Page size back to 10
+      expect((screen.getByLabelText(/Rows per page/i) as HTMLSelectElement).value).toBe("10");
+      // Button gone
+      expect(screen.queryByRole("button", { name: /reset filters/i })).not.toBeInTheDocument();
+    });
+  });
+
   it("shows empty state when search has no results", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
     const input = screen.getByPlaceholderText(/Search note or category/i);
