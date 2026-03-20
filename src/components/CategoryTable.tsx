@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import type { CategorySpending } from "@/lib/types";
 
 interface CategoryTableProps {
@@ -88,9 +89,9 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
           <Cols />
           <tbody>
             {groups.map((group) => (
-              <>
+              <Fragment key={`group-${group.parentName}`}>
                 {/* Parent group header */}
-                <tr key={`group-${group.parentName}`} className="bg-gray-50 border-t border-gray-100">
+                <tr className="bg-gray-50 border-t border-gray-100">
                   <td colSpan={2} className="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     {group.parentName ?? "Other"}
                   </td>
@@ -122,7 +123,7 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
                     </tr>
                   );
                 })}
-              </>
+              </Fragment>
             ))}
           </tbody>
         </table>

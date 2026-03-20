@@ -156,7 +156,7 @@ export default function TransactionList({ transactions, currency, selectedCatego
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
+      <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-base font-semibold text-gray-800">
           Transactions
           <span className="ml-2 text-sm font-normal text-gray-400">
@@ -176,7 +176,7 @@ export default function TransactionList({ transactions, currency, selectedCatego
               placeholder="Search note or category…"
               value={search}
               onChange={handleSearch}
-              className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"
+              className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-full sm:w-56"
             />
           </div>
           {isFiltered && (
@@ -195,46 +195,48 @@ export default function TransactionList({ transactions, currency, selectedCatego
           No transactions found
         </div>
       ) : (
-        <table className="w-full text-sm table-fixed">
-          <colgroup>
-            <col className="w-32" />
-            <col className="w-40" />
-            <col />
-            <col className="w-36" />
-          </colgroup>
-          <thead>
-            <tr className="text-gray-500 text-xs uppercase tracking-wide bg-gray-50">
-              <th className="px-6 py-3 text-left">Date</th>
-              <th className="px-6 py-3 text-left">Category</th>
-              <th className="px-6 py-3 text-left">Note</th>
-              <th className="px-6 py-3 text-right">
-                <button
-                  onClick={cycleSort}
-                  className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors cursor-pointer ${sortDir ? "text-indigo-600" : ""}`}
-                >
-                  Amount
-                  <SortIcon className="w-3.5 h-3.5" />
-                </button>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {paginated.map((tx) => (
-              <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-3 text-gray-500 whitespace-nowrap">{tx.date}</td>
-                <td className="px-6 py-3 text-gray-700">{tx.categoryName}</td>
-                <td className="px-6 py-3 text-gray-500 max-w-xs truncate">{tx.note || "—"}</td>
-                <td className={`px-6 py-3 text-right font-medium whitespace-nowrap ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
-                  {tx.type === 0 ? "+" : "-"}
-                  {currency}{tx.amount.toLocaleString("id-ID")}
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm table-fixed min-w-[520px]">
+            <colgroup>
+              <col className="w-28" />
+              <col className="w-36" />
+              <col />
+              <col className="w-36" />
+            </colgroup>
+            <thead>
+              <tr className="text-gray-500 text-xs uppercase tracking-wide bg-gray-50">
+                <th className="px-4 sm:px-6 py-3 text-left">Date</th>
+                <th className="px-4 sm:px-6 py-3 text-left">Category</th>
+                <th className="px-4 sm:px-6 py-3 text-left">Note</th>
+                <th className="px-4 sm:px-6 py-3 text-right">
+                  <button
+                    onClick={cycleSort}
+                    className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors cursor-pointer ${sortDir ? "text-indigo-600" : ""}`}
+                  >
+                    Amount
+                    <SortIcon className="w-3.5 h-3.5" />
+                  </button>
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {paginated.map((tx) => (
+                <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 sm:px-6 py-3 text-gray-500 whitespace-nowrap">{tx.date}</td>
+                  <td className="px-4 sm:px-6 py-3 text-gray-700">{tx.categoryName}</td>
+                  <td className="px-4 sm:px-6 py-3 text-gray-500 max-w-xs truncate">{tx.note || "—"}</td>
+                  <td className={`px-4 sm:px-6 py-3 text-right font-medium whitespace-nowrap ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
+                    {tx.type === 0 ? "+" : "-"}
+                    {currency}{tx.amount.toLocaleString("id-ID")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
 
-      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4 text-sm text-gray-500 flex-wrap">
+      <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4 text-sm text-gray-500 flex-wrap">
         <div className="flex items-center gap-2">
           <label htmlFor="page-size" className="whitespace-nowrap">Rows per page</label>
           <select
