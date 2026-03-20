@@ -1,16 +1,21 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileArchive, AlertCircle } from "lucide-react";
+import { Upload, FileArchive, AlertCircle, Loader2 } from "lucide-react";
 import { useDb } from "@/context/DbContext";
 
 export default function FileUpload() {
-  const { setDb, setFileName } = useDb();
+  const { loadDb, restoring, db } = useDb();
   const router = useRouter();
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // If a backup was restored from IndexedDB, go straight to dashboard
+  useEffect(() => {
+    if (!restoring && db) router.replace("/dashboard");
+  }, [restoring, db, router]);
 
   const processFile = useCallback(
     async (file: File) => {
@@ -23,16 +28,8 @@ export default function FileUpload() {
       setLoading(true);
 
       try {
-        const initSqlJs = (await import("sql.js")).default;
-        const SQL = await initSqlJs({
-          locateFile: () => `/sql-wasm.wasm`,
-        });
-
-        const buffer = await file.arrayBuffer();
-        const db = new SQL.Database(new Uint8Array(buffer));
-
-        setDb(db);
-        setFileName(file.name);
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        await loadDb(bytes, file.name);
         router.push("/dashboard");
       } catch {
         setError("Failed to parse the file. Make sure it's a valid .mmbak backup.");
@@ -40,7 +37,7 @@ export default function FileUpload() {
         setLoading(false);
       }
     },
-    [setDb, setFileName, router]
+    [loadDb, router]
   );
 
   const onDrop = useCallback(
@@ -61,6 +58,18 @@ export default function FileUpload() {
     [processFile]
   );
 
+  // Show a spinner while we check IndexedDB on first load
+  if (restoring) {
+    return (
+      <div className="flex flex-col items-center gap-3 text-gray-400">
+        <Loader2 className="w-8 h-8 animate-spin" />
+        <p className="text-sm">Restoring your last session…</p>
+      </div>
+    );
+  }
+
+  const busy = loading;
+
   return (
     <div className="flex flex-col items-center gap-4 w-full max-w-md">
       <div
@@ -75,14 +84,15 @@ export default function FileUpload() {
           <p className="text-gray-700 font-medium">Drop your .mmbak file here</p>
           <p className="text-gray-500 text-sm mt-1">or click to browse</p>
         </div>
-        <label className="cursor-pointer bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-          {loading ? "Loading…" : "Choose File"}
+        <label className={`cursor-pointer bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 ${busy ? "opacity-60 pointer-events-none" : ""}`}>
+          {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+          {busy ? "Loading…" : "Choose File"}
           <input
             type="file"
             accept=".mmbak"
             className="hidden"
             onChange={onFileChange}
-            disabled={loading}
+            disabled={busy}
           />
         </label>
       </div>

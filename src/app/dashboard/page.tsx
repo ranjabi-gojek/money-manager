@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useDb } from "@/context/DbContext";
 import { getTransactions, getSummary, getCategorySpending } from "@/lib/db";
 import type { TimeFilter, Transaction, Summary, CategorySpending } from "@/lib/types";
+import { Loader2 } from "lucide-react";
 import FilterTabs from "@/components/FilterTabs";
 import SummaryCards from "@/components/SummaryCards";
 import SpendingChart from "@/components/SpendingChart";
@@ -14,19 +15,18 @@ import { FileArchive } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
-  const { db, fileName } = useDb();
+  const { db, fileName, restoring } = useDb();
   const router = useRouter();
   const [filter, setFilter] = useState<TimeFilter>("all");
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [categorySpending, setCategorySpending] = useState<CategorySpending[]>([]);
 
-  // Redirect to upload if no DB is loaded (e.g. page refresh)
+  // Wait for IndexedDB restore before deciding whether to redirect
   useEffect(() => {
-    if (!db) {
-      router.replace("/");
-    }
-  }, [db, router]);
+    if (restoring) return;
+    if (!db) router.replace("/");
+  }, [restoring, db, router]);
 
   useEffect(() => {
     if (!db) return;
@@ -35,7 +35,13 @@ export default function DashboardPage() {
     setCategorySpending(getCategorySpending(db, filter));
   }, [db, filter]);
 
-  if (!db || !summary) return null;
+  if (restoring || !db || !summary) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-400">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
