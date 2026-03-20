@@ -19,6 +19,8 @@ const COLORS = [
 interface SpendingChartProps {
   data: CategorySpending[];
   currency: string;
+  selectedCategory?: string | null;
+  onCategoryClick?: (category: string) => void;
 }
 
 function formatYAxis(value: number): string {
@@ -50,7 +52,7 @@ function CustomTooltip({
   );
 }
 
-export default function SpendingChart({ data, currency }: SpendingChartProps) {
+export default function SpendingChart({ data, currency, selectedCategory, onCategoryClick }: SpendingChartProps) {
   const top = data.slice(0, 10);
 
   if (!top.length) {
@@ -79,9 +81,18 @@ export default function SpendingChart({ data, currency }: SpendingChartProps) {
             width={48}
           />
           <Tooltip content={<CustomTooltip currency={currency} />} />
-          <Bar dataKey="total" radius={[6, 6, 0, 0]}>
-            {top.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+          <Bar
+            dataKey="total"
+            radius={[6, 6, 0, 0]}
+            cursor={onCategoryClick ? "pointer" : undefined}
+            onClick={onCategoryClick ? (d: CategorySpending) => onCategoryClick(d.categoryName) : undefined}
+          >
+            {top.map((entry, i) => (
+              <Cell
+                key={i}
+                fill={COLORS[i % COLORS.length]}
+                opacity={selectedCategory && selectedCategory !== entry.categoryName ? 0.3 : 1}
+              />
             ))}
           </Bar>
         </BarChart>

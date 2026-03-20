@@ -5,6 +5,8 @@ import type { CategorySpending } from "@/lib/types";
 interface CategoryTableProps {
   data: CategorySpending[];
   currency: string;
+  selectedCategory?: string | null;
+  onCategoryClick?: (category: string) => void;
 }
 
 // Row height in px (py-2.5 top+bottom = 20px + ~21px text line = ~41px)
@@ -14,7 +16,7 @@ const DEFAULT_VISIBLE_ROWS = 6;
 // Three-section layout: fixed header | scrollable tbody | pinned footer.
 // All three tables share identical colgroup widths (table-fixed) so
 // columns stay perfectly aligned regardless of content.
-export default function CategoryTable({ data, currency }: CategoryTableProps) {
+export default function CategoryTable({ data, currency, selectedCategory, onCategoryClick }: CategoryTableProps) {
   const total = data.reduce((sum, c) => sum + c.total, 0);
 
   if (!data.length) {
@@ -65,8 +67,13 @@ export default function CategoryTable({ data, currency }: CategoryTableProps) {
           <tbody className="divide-y divide-gray-50">
             {data.map((row) => {
               const share = total > 0 ? (row.total / total) * 100 : 0;
+              const isSelected = selectedCategory === row.categoryName;
               return (
-                <tr key={row.categoryName} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={row.categoryName}
+                  onClick={() => onCategoryClick?.(row.categoryName)}
+                  className={`transition-colors ${onCategoryClick ? "cursor-pointer" : ""} ${isSelected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
+                >
                   <td className="px-4 py-2.5 font-medium text-gray-800 truncate">
                     {row.categoryName}
                   </td>

@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [categorySpending, setCategorySpending] = useState<CategorySpending[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Wait for IndexedDB restore before deciding whether to redirect
   useEffect(() => {
@@ -33,7 +34,11 @@ export default function DashboardPage() {
     setTransactions(getTransactions(db, filter));
     setSummary(getSummary(db, filter));
     setCategorySpending(getCategorySpending(db, filter));
+    setSelectedCategory(null);
   }, [db, filter]);
+
+  const handleCategoryClick = (category: string) =>
+    setSelectedCategory((prev) => (prev === category ? null : category));
 
   if (restoring || !db || !summary) {
     return (
@@ -78,12 +83,12 @@ export default function DashboardPage() {
 
         {/* Chart + Table side by side on larger screens */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-          <SpendingChart data={categorySpending} currency={summary.currency} />
-          <CategoryTable data={categorySpending} currency={summary.currency} />
+          <SpendingChart data={categorySpending} currency={summary.currency} selectedCategory={selectedCategory} onCategoryClick={handleCategoryClick} />
+          <CategoryTable data={categorySpending} currency={summary.currency} selectedCategory={selectedCategory} onCategoryClick={handleCategoryClick} />
         </div>
 
         {/* Transaction list */}
-        <TransactionList transactions={transactions} currency={summary.currency} />
+        <TransactionList transactions={transactions} currency={summary.currency} selectedCategory={selectedCategory} onClearSelectedCategory={() => setSelectedCategory(null)} />
       </main>
     </div>
   );

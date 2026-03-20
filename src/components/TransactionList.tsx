@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Transaction, CategoryFilter } from "@/lib/types";
 import CategoryFilterPopover from "./CategoryFilterPopover";
@@ -13,6 +13,8 @@ type SortDir = "asc" | "desc" | null;
 interface TransactionListProps {
   transactions: Transaction[];
   currency: string;
+  selectedCategory?: string | null;
+  onClearSelectedCategory?: () => void;
 }
 
 const DEFAULT_FILTER: CategoryFilter = { mode: "include", selected: new Set() };
@@ -44,12 +46,24 @@ function loadFilters(): { search: string; pageSize: PageSize; sortDir: SortDir; 
   }
 }
 
-export default function TransactionList({ transactions, currency }: TransactionListProps) {
+export default function TransactionList({ transactions, currency, selectedCategory, onClearSelectedCategory }: TransactionListProps) {
   const [search, setSearch] = useState(() => loadFilters().search);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(() => loadFilters().pageSize);
   const [sortDir, setSortDir] = useState<SortDir>(() => loadFilters().sortDir);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(() => loadFilters().categoryFilter);
+
+  // Sync external category selection into the category filter (skip initial mount)
+  const isMounted = useRef(false);
+  useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return; }
+    if (selectedCategory) {
+      setCategoryFilter({ mode: "include", selected: new Set([selectedCategory]) });
+    } else {
+      setCategoryFilter(DEFAULT_FILTER);
+    }
+    setPage(1);
+  }, [selectedCategory]);
 
   // Persist filters to localStorage whenever they change
   useEffect(() => {
@@ -135,6 +149,7 @@ export default function TransactionList({ transactions, currency }: TransactionL
     setCategoryFilter(DEFAULT_FILTER);
     setPageSize(10);
     setPage(1);
+    onClearSelectedCategory?.();
   };
 
   const SortIcon = sortDir === "desc" ? ArrowDown : sortDir === "asc" ? ArrowUp : ArrowUpDown;
