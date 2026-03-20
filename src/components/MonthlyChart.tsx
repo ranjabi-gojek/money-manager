@@ -51,6 +51,20 @@ function CustomTooltip({
   );
 }
 
+const LEGEND_META = [
+  { key: "income",  label: "Income",  color: "#10b981" },
+  { key: "expense", label: "Expense", color: "#ef4444" },
+  { key: "balance", label: "Balance", color: "#6366f1" },
+] as const;
+
+function fmtCompact(v: number): string {
+  const abs = Math.abs(v);
+  const s = abs >= 1_000_000 ? `${(abs / 1_000_000).toFixed(1)}M`
+           : abs >= 1_000    ? `${(abs / 1_000).toFixed(0)}K`
+           : String(abs);
+  return v < 0 ? `−${s}` : s;
+}
+
 export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
   if (!data.length) {
     return (
@@ -79,7 +93,6 @@ export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
             width={52}
           />
           <Tooltip content={<CustomTooltip currency={currency} />} />
-          <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: 16 }} />
           <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
           <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
           <Line
@@ -92,6 +105,67 @@ export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
           />
         </ComposedChart>
       </ResponsiveContainer>
+
+      {/* Per-month breakdown table */}
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-xs border-collapse">
+          <thead>
+            <tr>
+              <th className="text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-16" />
+              {data.map((r) => (
+                <th key={r.month} className="text-center text-gray-400 font-normal px-2 py-1 whitespace-nowrap">
+                  {r.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {LEGEND_META.map(({ key, label, color }) => (
+              <tr key={key} className="border-t border-gray-100">
+                <td className="pr-4 py-1.5 whitespace-nowrap">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
+                    <span className="text-gray-500">{label}</span>
+                  </span>
+                </td>
+                {data.map((r) => {
+                  const v = r[key];
+                  return (
+                    <td
+                      key={r.month}
+                      className="text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap"
+                      style={{ color: key === "balance" && v < 0 ? "#ef4444" : color }}
+                    >
+                      {currency}{fmtCompact(v)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+            <tr className="border-t border-gray-100">
+              <td className="pr-4 py-1.5 whitespace-nowrap">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0 bg-gray-300" />
+                  <span className="text-gray-500">Saving rate</span>
+                </span>
+              </td>
+              {data.map((r) => {
+                const rate = r.income > 0 ? (r.balance / r.income) * 100 : null;
+                const color = rate === null ? "#9ca3af" : rate >= 0 ? "#10b981" : "#ef4444";
+                return (
+                  <td
+                    key={r.month}
+                    className="text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap"
+                    style={{ color }}
+                  >
+                    {rate === null ? "—" : `${rate >= 0 ? "" : "−"}${Math.abs(rate).toFixed(1)}%`}
+                  </td>
+                );
+              })}
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
