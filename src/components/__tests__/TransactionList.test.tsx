@@ -75,4 +75,41 @@ describe("TransactionList", () => {
     render(<TransactionList transactions={[]} currency="Rp" />);
     expect(screen.getByText(/No transactions found/i)).toBeInTheDocument();
   });
+
+  describe("amount sorting", () => {
+    it("sorts descending on first click (biggest first)", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      fireEvent.click(screen.getByRole("button", { name: /amount/i }));
+      const rows = screen.getAllByRole("row").slice(1); // skip header
+      const amounts = rows.map((r) => r.querySelector("td:last-child")?.textContent ?? "");
+      expect(amounts[0]).toContain("5.000.000");
+      expect(amounts[1]).toContain("50.000");
+      expect(amounts[2]).toContain("25.000");
+    });
+
+    it("sorts ascending on second click (smallest first)", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const btn = screen.getByRole("button", { name: /amount/i });
+      fireEvent.click(btn); // desc
+      fireEvent.click(btn); // asc
+      const rows = screen.getAllByRole("row").slice(1);
+      const amounts = rows.map((r) => r.querySelector("td:last-child")?.textContent ?? "");
+      expect(amounts[0]).toContain("25.000");
+      expect(amounts[1]).toContain("50.000");
+      expect(amounts[2]).toContain("5.000.000");
+    });
+
+    it("restores original order on third click", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const btn = screen.getByRole("button", { name: /amount/i });
+      fireEvent.click(btn); // desc
+      fireEvent.click(btn); // asc
+      fireEvent.click(btn); // reset
+      const rows = screen.getAllByRole("row").slice(1);
+      // Original order: lunch (50k), grab (25k), salary (5M)
+      expect(rows[0].textContent).toContain("lunch");
+      expect(rows[1].textContent).toContain("grab");
+      expect(rows[2].textContent).toContain("monthly salary");
+    });
+  });
 });

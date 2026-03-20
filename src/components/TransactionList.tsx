@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Transaction } from "@/lib/types";
 
 const PAGE_SIZE = 20;
+
+type SortDir = "asc" | "desc" | null;
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -14,16 +16,23 @@ interface TransactionListProps {
 export default function TransactionList({ transactions, currency }: TransactionListProps) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    if (!q) return transactions;
-    return transactions.filter(
-      (t) =>
-        t.note.toLowerCase().includes(q) ||
-        t.categoryName.toLowerCase().includes(q)
+    const base = q
+      ? transactions.filter(
+          (t) =>
+            t.note.toLowerCase().includes(q) ||
+            t.categoryName.toLowerCase().includes(q)
+        )
+      : transactions;
+
+    if (!sortDir) return base;
+    return [...base].sort((a, b) =>
+      sortDir === "desc" ? b.amount - a.amount : a.amount - b.amount
     );
-  }, [transactions, search]);
+  }, [transactions, search, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -33,6 +42,13 @@ export default function TransactionList({ transactions, currency }: TransactionL
     setSearch(e.target.value);
     setPage(1);
   };
+
+  const cycleSort = () => {
+    setSortDir((d) => (d === null ? "desc" : d === "desc" ? "asc" : null));
+    setPage(1);
+  };
+
+  const SortIcon = sortDir === "desc" ? ArrowDown : sortDir === "asc" ? ArrowUp : ArrowUpDown;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
@@ -66,7 +82,15 @@ export default function TransactionList({ transactions, currency }: TransactionL
               <th className="px-6 py-3 text-left">Date</th>
               <th className="px-6 py-3 text-left">Category</th>
               <th className="px-6 py-3 text-left">Note</th>
-              <th className="px-6 py-3 text-right">Amount</th>
+              <th className="px-6 py-3 text-right">
+                <button
+                  onClick={cycleSort}
+                  className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors ${sortDir ? "text-indigo-600" : ""}`}
+                >
+                  Amount
+                  <SortIcon className="w-3.5 h-3.5" />
+                </button>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
