@@ -3,18 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDb } from "@/context/DbContext";
-import { getMonthlyTotals, getSummary } from "@/lib/db";
-import type { MonthlyTotal, TimeFilter } from "@/lib/types";
+import { getMonthlyTotals, getSummary, getCategoryMonthlySpending } from "@/lib/db";
+import type { MonthlyTotal, CategoryPeriodSpending, TimeFilter } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import FilterTabs from "@/components/FilterTabs";
 import MonthlyChart from "@/components/MonthlyChart";
+import CategoryTrendChart from "@/components/CategoryTrendChart";
 
 export default function AnalyticsPage() {
   const { db, fileName, restoring } = useDb();
   const router = useRouter();
   const [filter, setFilter] = useState<TimeFilter>("all");
   const [monthlyTotals, setMonthlyTotals] = useState<MonthlyTotal[]>([]);
+  const [categorySpending, setCategorySpending] = useState<CategoryPeriodSpending[]>([]);
   const [currency, setCurrency] = useState("");
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!db) return;
     setMonthlyTotals(getMonthlyTotals(db, filter));
+    setCategorySpending(getCategoryMonthlySpending(db, filter));
     setCurrency(getSummary(db, filter).currency);
   }, [db, filter]);
 
@@ -45,6 +48,7 @@ export default function AnalyticsPage() {
           <FilterTabs value={filter} onChange={setFilter} />
         </div>
         <MonthlyChart data={monthlyTotals} currency={currency} />
+        <CategoryTrendChart data={categorySpending} currency={currency} />
       </main>
     </div>
   );

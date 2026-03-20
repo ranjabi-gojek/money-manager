@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import initSqlJs from "sql.js";
-import { getDateRange, getTransactions, getSummary, getCategorySpending, getCategories, getMonthlyTotals } from "../db";
+import { getDateRange, getTransactions, getSummary, getCategorySpending, getCategories, getMonthlyTotals, getCategoryMonthlySpending } from "../db";
 import type { Database } from "sql.js";
 
 // Build an in-memory SQLite DB that mimics the .mmbak schema
@@ -136,6 +136,51 @@ describe("db queries", () => {
       // 2025: Food 75000, Transport 20000
       const food = spending.find((s) => s.categoryName === "Food");
       expect(food?.total).toBe(75000);
+    });
+  });
+
+  describe("getCategoryMonthlySpending", () => {
+    it("returns only expense rows grouped by billing period and category", () => {
+      const rows = getCategoryMonthlySpending(db, "all");
+      const periods = [...new Set(rows.map((r) => r.period))].sort();
+      expect(periods).toEqual(["2024-06", "2024-07", "2025-03"]);
+    });
+
+    it("groups amounts correctly per period and category", () => {
+      const rows = getCategoryMonthlySpending(db, "all");
+      const food2024Jun = rows.find((r) => r.period === "2024-06" && r.categoryName === "Food");
+      expect(food2024Jun?.amount).toBe(50000);
+      const food2025Mar = rows.find((r) => r.period === "2025-03" && r.categoryName === "Food");
+      expect(food2025Mar?.amount).toBe(75000);
+    });
+
+    it("attaches parent category name", () => {
+      const rows = getCategoryMonthlySpending(db, "all");
+      expect(rows.every((r) => r.parentName === "Primary")).toBe(true);
+    });
+
+    it("attaches human-readable label", () => {
+      const rows = getCategoryMonthlySpending(db, "all");
+      const jun = rows.find((r) => r.period === "2024-06");
+      expect(jun?.label).toBe("Jun 2024");
+    });
+
+    it("filters to last_year (2025)", () => {
+      const rows = getCategoryMonthlySpending(db, "last_year");
+      expect(rows.every((r) => r.period.startsWith("2025-"))).toBe(true);
+      expect(rows.length).toBeGreaterThan(0);
+    });
+
+    it("returns empty array when no data matches filter", () => {
+      const rows = getCategoryMonthlySpending(db, "this_year");
+      expect(rows).toEqual([]);
+    });
+
+    it("excludes transfer rows (do_type=3)", () => {
+      const rows = getCategoryMonthlySpending(db, "all");
+      // Transfer on 2025-03-25 should not be included — Food in 2025-03 is 75000 only
+      const food2025Mar = rows.find((r) => r.period === "2025-03" && r.categoryName === "Food");
+      expect(food2025Mar?.amount).toBe(75000);
     });
   });
 

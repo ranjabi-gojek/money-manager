@@ -5,6 +5,7 @@ import type {
   Currency,
   Summary,
   CategorySpending,
+  CategoryPeriodSpending,
   MonthlyTotal,
   TimeFilter,
   DateRange,
@@ -191,6 +192,65 @@ function billingPeriodForDate(wdate: string): string {
     return `${nextY}-${String(nextM).padStart(2, "0")}`;
   }
   return `${y}-${String(m).padStart(2, "0")}`;
+}
+
+export function getCategoryMonthlySpending(
+  db: Database,
+  filter: TimeFilter = "all"
+): CategoryPeriodSpending[] {
+  let sqlWhere = "WHERE i.do_type = 1";
+  const params: Record<string, string> = {};
+  let targetYear: number | null = null;
+
+  if (filter !== "all") {
+    const now = new Date();
+    const year = now.getFullYear();
+    targetYear = filter === "this_year" ? year : year - 1;
+    params[":start"] = `${targetYear - 1}-12-20`;
+    params[":end"] = `${targetYear}-12-31`;
+    sqlWhere += " AND i.wdate BETWEEN :start AND :end";
+  }
+
+  const sql = `
+    SELECT i.wdate, c.NAME, p.NAME as parentName, i.AMOUNT_ACCOUNT
+    FROM INOUTCOME i
+    JOIN ZCATEGORY c ON c.uid = i.ctgUid
+    LEFT JOIN ZCATEGORY p ON p.uid = c.pUid
+    ${sqlWhere}
+    ORDER BY i.wdate ASC
+  `;
+
+  const result = db.exec(sql, params);
+  if (!result.length) return [];
+
+  // Group by billing period + category
+  const groups = new Map<string, { parentName: string | null; amount: number }>();
+  const periodLabels = new Map<string, string>();
+
+  for (const row of result[0].values) {
+    const wdate = row[0] as string;
+    const categoryName = row[1] as string;
+    const parentName = (row[2] as string) ?? null;
+    const amount = Number(row[3]) || 0;
+    const period = billingPeriodForDate(wdate);
+
+    if (targetYear !== null && !period.startsWith(`${targetYear}-`)) continue;
+
+    const key = `${period}::${categoryName}`;
+    if (!groups.has(key)) {
+      groups.set(key, { parentName, amount: 0 });
+      if (!periodLabels.has(period)) {
+        const [y, mo] = period.split("-").map(Number);
+        periodLabels.set(period, new Date(y, mo - 1, 1).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
+      }
+    }
+    groups.get(key)!.amount += amount;
+  }
+
+  return [...groups.entries()].map(([key, { parentName, amount }]) => {
+    const [period, categoryName] = key.split("::");
+    return { period, label: periodLabels.get(period)!, parentName, categoryName, amount };
+  });
 }
 
 export function getMonthlyTotals(

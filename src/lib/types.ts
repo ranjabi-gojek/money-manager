@@ -58,3 +58,11 @@ export interface MonthlyTotal {
   expense: number;
   balance: number;
 }
+
+export interface CategoryPeriodSpending {
+  period: string;       // "YYYY-MM"
+  label: string;        // "Jan 2025"
+  parentName: string | null;
+  categoryName: string;
+  amount: number;
+}
