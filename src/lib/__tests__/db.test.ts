@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import initSqlJs from "sql.js";
-import { getDateRange, getTransactions, getSummary, getCategorySpending, getCategories } from "../db";
+import { getDateRange, getTransactions, getSummary, getCategorySpending, getCategories, getMonthlyTotals } from "../db";
 import type { Database } from "sql.js";
 
 // Build an in-memory SQLite DB that mimics the .mmbak schema
@@ -136,6 +136,53 @@ describe("db queries", () => {
       // 2025: Food 75000, Transport 20000
       const food = spending.find((s) => s.categoryName === "Food");
       expect(food?.total).toBe(75000);
+    });
+  });
+
+  describe("getMonthlyTotals", () => {
+    it("returns one row per month ordered ASC", () => {
+      const rows = getMonthlyTotals(db, "all");
+      // mock data spans 2024-06, 2024-07, 2025-01, 2025-03
+      expect(rows.length).toBe(4);
+      expect(rows.map((r) => r.month)).toEqual(["2024-06", "2024-07", "2025-01", "2025-03"]);
+    });
+
+    it("correctly pivots income and expense per month", () => {
+      const rows = getMonthlyTotals(db, "all");
+      const jun24 = rows.find((r) => r.month === "2024-06")!;
+      expect(jun24.income).toBe(5000000);
+      expect(jun24.expense).toBe(50000);
+      expect(jun24.balance).toBe(4950000);
+
+      const mar25 = rows.find((r) => r.month === "2025-03")!;
+      expect(mar25.income).toBe(0);
+      expect(mar25.expense).toBe(75000 + 20000); // Dinner + Bus (transfer excluded)
+      expect(mar25.balance).toBe(-(75000 + 20000));
+    });
+
+    it("excludes transfer rows (do_type=3)", () => {
+      const rows = getMonthlyTotals(db, "all");
+      const mar25 = rows.find((r) => r.month === "2025-03")!;
+      // transfer of 100000 must not appear in expense
+      expect(mar25.expense).toBe(95000);
+    });
+
+    it("attaches a human-readable label", () => {
+      const rows = getMonthlyTotals(db, "all");
+      const jun24 = rows.find((r) => r.month === "2024-06")!;
+      expect(jun24.label).toBe("Jun 2024");
+    });
+
+    it("filters to last_year (2025)", () => {
+      const rows = getMonthlyTotals(db, "last_year");
+      expect(rows.every((r) => r.month.startsWith("2025-"))).toBe(true);
+      expect(rows.length).toBe(2); // Jan + Mar
+    });
+
+    it("returns empty array when no data matches filter", () => {
+      // this_year = 2026, no 2026 data in mock
+      const rows = getMonthlyTotals(db, "this_year");
+      expect(rows).toEqual([]);
     });
   });
 });

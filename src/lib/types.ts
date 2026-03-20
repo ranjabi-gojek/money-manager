@@ -50,3 +50,11 @@ export interface DateRange {
   start: string;
   end: string;
 }
+
+export interface MonthlyTotal {
+  month: string;   // "YYYY-MM"
+  label: string;   // "Jan 2024"
+  income: number;
+  expense: number;
+  balance: number;
+}

@@ -5,6 +5,7 @@ import type {
   Currency,
   Summary,
   CategorySpending,
+  MonthlyTotal,
   TimeFilter,
   DateRange,
 } from "./types";
@@ -162,4 +163,38 @@ export function getCategorySpending(
     total: (row[2] as number) ?? 0,
     count: (row[3] as number) ?? 0,
   }));
+}
+
+export function getMonthlyTotals(
+  db: Database,
+  filter: TimeFilter = "all"
+): MonthlyTotal[] {
+  const range = getDateRange(filter);
+  const { where, params } = buildWhereClause(range, ["i.do_type IN (0, 1)"]);
+
+  const sql = `
+    SELECT
+      substr(i.wdate, 1, 7) AS month,
+      SUM(CASE WHEN i.do_type = 0 THEN i.AMOUNT_ACCOUNT ELSE 0 END) AS income,
+      SUM(CASE WHEN i.do_type = 1 THEN i.AMOUNT_ACCOUNT ELSE 0 END) AS expense
+    FROM INOUTCOME i
+    ${where}
+    GROUP BY substr(i.wdate, 1, 7)
+    ORDER BY month ASC
+  `;
+
+  const result = db.exec(sql, params);
+  if (!result.length) return [];
+
+  return result[0].values.map((row) => {
+    const month = row[0] as string;
+    const income = Number(row[1]) || 0;
+    const expense = Number(row[2]) || 0;
+    const [year, mon] = month.split("-");
+    const label = new Date(Number(year), Number(mon) - 1, 1).toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+    return { month, label, income, expense, balance: income - expense };
+  });
 }
