@@ -180,7 +180,13 @@ export default function TransactionList({ transactions, currency }: TransactionL
           No transactions found
         </div>
       ) : (
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
+          <colgroup>
+            <col className="w-32" />
+            <col className="w-40" />
+            <col />
+            <col className="w-36" />
+          </colgroup>
           <thead>
             <tr className="text-gray-500 text-xs uppercase tracking-wide bg-gray-50">
               <th className="px-6 py-3 text-left">Date</th>
