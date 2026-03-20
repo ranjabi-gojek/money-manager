@@ -132,17 +132,25 @@ export function getCategorySpending(
   filter: TimeFilter = "all"
 ): CategorySpending[] {
   const range = getDateRange(filter);
-  const { where, params } = buildWhereClause(range, [
-    "i.do_type = 1",
-    "c.uid = i.ctgUid",
-  ]);
+  const conditions: string[] = ["i.do_type = 1"];
+  const params: Record<string, string> = {};
+
+  if (range) {
+    conditions.push("i.wdate BETWEEN :start AND :end");
+    params[":start"] = range.start;
+    params[":end"] = range.end;
+  }
+
+  const where = `WHERE ${conditions.join(" AND ")}`;
 
   const sql = `
-    SELECT c.NAME, SUM(i.AMOUNT_ACCOUNT) as total, COUNT(*) as cnt
-    FROM INOUTCOME i, ZCATEGORY c
+    SELECT c.NAME, p.NAME as parentName, SUM(i.AMOUNT_ACCOUNT) as total, COUNT(*) as cnt
+    FROM INOUTCOME i
+    JOIN ZCATEGORY c ON c.uid = i.ctgUid
+    LEFT JOIN ZCATEGORY p ON p.uid = c.pUid
     ${where}
     GROUP BY c.uid
-    ORDER BY total DESC
+    ORDER BY CASE WHEN p.NAME IS NULL THEN 1 ELSE 0 END, p.NAME, total DESC
   `;
 
   const result = db.exec(sql, params);
@@ -150,7 +158,8 @@ export function getCategorySpending(
 
   return result[0].values.map((row) => ({
     categoryName: (row[0] as string) ?? "Uncategorized",
-    total: (row[1] as number) ?? 0,
-    count: (row[2] as number) ?? 0,
+    parentName: (row[1] as string) ?? null,
+    total: (row[2] as number) ?? 0,
+    count: (row[3] as number) ?? 0,
   }));
 }

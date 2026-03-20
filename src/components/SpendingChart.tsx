@@ -53,7 +53,7 @@ function CustomTooltip({
 }
 
 export default function SpendingChart({ data, currency, selectedCategory, onCategoryClick }: SpendingChartProps) {
-  const top = data.slice(0, 10);
+  const top = [...data].sort((a, b) => b.total - a.total).slice(0, 10);
 
   if (!top.length) {
     return (

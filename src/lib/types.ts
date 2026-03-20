@@ -31,6 +31,7 @@ export interface Summary {
 
 export interface CategorySpending {
   categoryName: string;
+  parentName: string | null;
   total: number;
   count: number;
 }

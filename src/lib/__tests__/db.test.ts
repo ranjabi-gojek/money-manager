@@ -12,27 +12,28 @@ async function buildMockDb(): Promise<Database> {
     CREATE TABLE CURRENCY (uid TEXT PRIMARY KEY, SYMBOL TEXT);
     INSERT INTO CURRENCY VALUES ('IDR_IDR', 'Rp');
 
-    CREATE TABLE ZCATEGORY (uid INTEGER PRIMARY KEY, NAME TEXT, status INTEGER, type INTEGER, c_is_del INTEGER);
-    INSERT INTO ZCATEGORY VALUES (1, 'Food', 0, 1, NULL);
-    INSERT INTO ZCATEGORY VALUES (2, 'Transport', 0, 1, NULL);
-    INSERT INTO ZCATEGORY VALUES (3, 'Salary', 0, 0, NULL);
+    CREATE TABLE ZCATEGORY (uid TEXT PRIMARY KEY, NAME TEXT, status INTEGER, type INTEGER, c_is_del INTEGER, pUid TEXT);
+    INSERT INTO ZCATEGORY VALUES ('p1', 'Primary', 0, 1, 1, NULL);
+    INSERT INTO ZCATEGORY VALUES ('1', 'Food', 0, 1, NULL, 'p1');
+    INSERT INTO ZCATEGORY VALUES ('2', 'Transport', 0, 1, NULL, 'p1');
+    INSERT INTO ZCATEGORY VALUES ('3', 'Salary', 0, 0, NULL, NULL);
 
     CREATE TABLE INOUTCOME (
       wdate TEXT, do_type INTEGER, AMOUNT_ACCOUNT NUMERIC,
       currencyUid TEXT, ctgUid INTEGER, ZCONTENT TEXT
     );
     -- Income: 2024
-    INSERT INTO INOUTCOME VALUES ('2024-06-01', 0, 5000000, 'IDR_IDR', 3, 'Salary June');
+    INSERT INTO INOUTCOME VALUES ('2024-06-01', 0, 5000000, 'IDR_IDR', '3', 'Salary June');
     -- Expenses: 2024
-    INSERT INTO INOUTCOME VALUES ('2024-06-15', 1, 50000, 'IDR_IDR', 1, 'Lunch');
-    INSERT INTO INOUTCOME VALUES ('2024-07-01', 1, 30000, 'IDR_IDR', 2, 'Grab');
+    INSERT INTO INOUTCOME VALUES ('2024-06-15', 1, 50000, 'IDR_IDR', '1', 'Lunch');
+    INSERT INTO INOUTCOME VALUES ('2024-07-01', 1, 30000, 'IDR_IDR', '2', 'Grab');
     -- Income: 2025
-    INSERT INTO INOUTCOME VALUES ('2025-01-10', 0, 6000000, 'IDR_IDR', 3, 'Salary Jan 2025');
+    INSERT INTO INOUTCOME VALUES ('2025-01-10', 0, 6000000, 'IDR_IDR', '3', 'Salary Jan 2025');
     -- Expenses: 2025
-    INSERT INTO INOUTCOME VALUES ('2025-03-05', 1, 75000, 'IDR_IDR', 1, 'Dinner');
-    INSERT INTO INOUTCOME VALUES ('2025-03-20', 1, 20000, 'IDR_IDR', 2, 'Bus');
+    INSERT INTO INOUTCOME VALUES ('2025-03-05', 1, 75000, 'IDR_IDR', '1', 'Dinner');
+    INSERT INTO INOUTCOME VALUES ('2025-03-20', 1, 20000, 'IDR_IDR', '2', 'Bus');
     -- Transfer (should be excluded)
-    INSERT INTO INOUTCOME VALUES ('2025-03-25', 3, 100000, 'IDR_IDR', 1, 'Transfer');
+    INSERT INTO INOUTCOME VALUES ('2025-03-25', 3, 100000, 'IDR_IDR', '1', 'Transfer');
   `);
 
   return db;
@@ -114,13 +115,20 @@ describe("db queries", () => {
       const food = spending.find((s) => s.categoryName === "Food");
       expect(food?.total).toBe(50000 + 75000);
       expect(food?.count).toBe(2);
+      expect(food?.parentName).toBe("Primary");
     });
 
-    it("is sorted by total descending", () => {
+    it("attaches parent category name", () => {
       const spending = getCategorySpending(db, "all");
-      for (let i = 1; i < spending.length; i++) {
-        expect(spending[i - 1].total).toBeGreaterThanOrEqual(spending[i].total);
-      }
+      expect(spending.every((s) => s.parentName === "Primary")).toBe(true);
+    });
+
+    it("is sorted by parent then total descending", () => {
+      const spending = getCategorySpending(db, "all");
+      // Both categories share the same parent (Primary), so within the group
+      // Food (125000) should come before Transport (50000)
+      expect(spending[0].categoryName).toBe("Food");
+      expect(spending[1].categoryName).toBe("Transport");
     });
 
     it("filters to last_year only", () => {
