@@ -174,6 +174,46 @@ export default function CategoryTrendChart({ data, currency }: Props) {
             })}
           </BarChart>
         </ResponsiveContainer>
+
+        {/* Parent breakdown table */}
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-xs border-collapse">
+            <thead>
+              <tr>
+                <th className="text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-24" />
+                {periods.map(({ period, label }) => (
+                  <th key={period} className="text-center text-gray-400 font-normal px-2 py-1 whitespace-nowrap">
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {parentNames.map((name, i) => {
+                const color = PARENT_COLORS[name] ?? CHILD_COLORS[i % CHILD_COLORS.length];
+                return (
+                  <tr key={name} className="border-t border-gray-100">
+                    <td className="pr-4 py-1.5 whitespace-nowrap">
+                      <span className="flex items-center gap-1.5">
+                        <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
+                        <span className="text-gray-500">{name}</span>
+                      </span>
+                    </td>
+                    {periods.map(({ period }) => {
+                      const entry = parentChartData.find((d) => d.period === period);
+                      const v = (entry?.[name] as number) ?? 0;
+                      return (
+                        <td key={period} className="text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap" style={{ color }}>
+                          {v ? `${currency}${fmt(v)}` : "—"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Child drill-down stacked bar chart */}
@@ -228,6 +268,46 @@ export default function CategoryTrendChart({ data, currency }: Props) {
               })}
             </BarChart>
           </ResponsiveContainer>
+
+          {/* Child breakdown table */}
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-xs border-collapse">
+              <thead>
+                <tr>
+                  <th className="text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-24" />
+                  {periods.map(({ period, label }) => (
+                    <th key={period} className="text-center text-gray-400 font-normal px-2 py-1 whitespace-nowrap">
+                      {label}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {childKeys.map((key, i) => {
+                  const color = CHILD_COLORS[i % CHILD_COLORS.length];
+                  return (
+                    <tr key={key} className="border-t border-gray-100">
+                      <td className="pr-4 py-1.5 whitespace-nowrap">
+                        <span className="flex items-center gap-1.5">
+                          <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
+                          <span className="text-gray-500">{key}</span>
+                        </span>
+                      </td>
+                      {periods.map(({ period }) => {
+                        const entry = childChartData.find((d) => d.period === period);
+                        const v = (entry?.[key] as number) ?? 0;
+                        return (
+                          <td key={period} className="text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap" style={{ color }}>
+                            {v ? `${currency}${fmt(v)}` : "—"}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
