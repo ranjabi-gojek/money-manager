@@ -135,7 +135,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         <h2 className="text-base font-semibold text-gray-800 mb-1">Expense trends by category group</h2>
         <p className="text-xs text-gray-400 mb-5">Click a bar or legend label to drill into sub-categories</p>
-        <ResponsiveContainer width="100%" height={300} minWidth={0}>
+        <ResponsiveContainer width="100%" height={240} minWidth={0}>
           <BarChart data={parentChartData} margin={{ top: 4, right: 8, bottom: 0, left: 16 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#6b7280" }} />
@@ -229,7 +229,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
             </button>
           </div>
           <p className="text-xs text-gray-400 mb-5">Click a bar or legend label to highlight a sub-category</p>
-          <ResponsiveContainer width="100%" height={280} minWidth={0}>
+          <ResponsiveContainer width="100%" height={240} minWidth={0}>
             <BarChart data={childChartData} margin={{ top: 4, right: 8, bottom: 0, left: 16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#6b7280" }} />

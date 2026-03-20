@@ -27,7 +27,7 @@ export default function FilterTabs({ value, onChange, availableYears }: FilterTa
   const selectCls = "bg-transparent text-inherit font-medium text-sm focus:outline-none cursor-pointer";
 
   return (
-    <div role="tablist" aria-label="Time filter" className="flex gap-1 bg-gray-100 p-1 rounded-xl items-center">
+    <div role="tablist" aria-label="Time filter" className="flex flex-wrap gap-1 bg-gray-100 p-1 rounded-xl items-center">
       {/* Month */}
       <div
         role="tab"

@@ -64,10 +64,10 @@ export default function SpendingChart({ data, currency, selectedCategory, onCate
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col h-full">
-      <h2 className="text-base font-semibold text-gray-800 mb-4 shrink-0">Spending by Category</h2>
-      <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-        <BarChart data={top} margin={{ top: 0, right: 0, bottom: 60, left: 10 }}>
+    <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <h2 className="text-base font-semibold text-gray-800 mb-4">Spending by Category</h2>
+      <ResponsiveContainer width="100%" height={320} minWidth={0}>
+        <BarChart data={top} margin={{ top: 0, right: 0, bottom: 50, left: 4 }}>
           <XAxis
             dataKey="categoryName"
             tick={{ fontSize: 12, fill: "#6b7280" }}
@@ -78,7 +78,7 @@ export default function SpendingChart({ data, currency, selectedCategory, onCate
           <YAxis
             tickFormatter={formatYAxis}
             tick={{ fontSize: 12, fill: "#6b7280" }}
-            width={48}
+            width={40}
           />
           <Tooltip content={<CustomTooltip currency={currency} />} />
           <Bar

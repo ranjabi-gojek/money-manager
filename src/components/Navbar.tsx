@@ -55,7 +55,8 @@ export default function Navbar({ fileName }: NavbarProps) {
             href="/"
             className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
           >
-            Upload another file
+            <span className="hidden sm:inline">Upload another file</span>
+            <span className="sm:hidden">Upload</span>
           </Link>
         </div>
       </div>
