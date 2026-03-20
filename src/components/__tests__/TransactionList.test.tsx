@@ -76,6 +76,45 @@ describe("TransactionList", () => {
     expect(screen.getByText(/No transactions found/i)).toBeInTheDocument();
   });
 
+  describe("rows per page", () => {
+    it("defaults to 10 rows per page", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const select = screen.getByLabelText(/Rows per page/i) as HTMLSelectElement;
+      expect(select.value).toBe("10");
+    });
+
+    it("shows all size options (10, 20, 50, 100)", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const options = Array.from(
+        (screen.getByLabelText(/Rows per page/i) as HTMLSelectElement).options
+      ).map((o) => o.value);
+      expect(options).toEqual(["10", "15", "20", "50", "100"]);
+    });
+
+    it("changing page size resets to page 1 and re-paginates", () => {
+      // Build 25 transactions so pagination kicks in at size 10
+      const many = Array.from({ length: 25 }, (_, i) =>
+        makeTx({ id: i + 1, note: `tx-${i + 1}` })
+      );
+      render(<TransactionList transactions={many} currency="Rp" />);
+
+      // Default size 10: page 1 of 3
+      expect(screen.getByText(/Page 1 of 3/i)).toBeInTheDocument();
+
+      // Switch to 20 rows → page 1 of 2
+      fireEvent.change(screen.getByLabelText(/Rows per page/i), {
+        target: { value: "20" },
+      });
+      expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
+
+      // Switch to 50 rows → all fit on one page (no pagination shown)
+      fireEvent.change(screen.getByLabelText(/Rows per page/i), {
+        target: { value: "50" },
+      });
+      expect(screen.queryByText(/Page \d+ of \d+/i)).not.toBeInTheDocument();
+    });
+  });
+
   describe("amount sorting", () => {
     // transactions: lunch -50k, grab -25k, salary +5M
     // signed values:  -50000,   -25000,    +5000000

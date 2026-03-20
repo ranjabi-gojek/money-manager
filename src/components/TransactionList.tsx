@@ -5,7 +5,8 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Transaction, CategoryFilter } from "@/lib/types";
 import CategoryFilterPopover from "./CategoryFilterPopover";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE_OPTIONS = [10, 15, 20, 50, 100] as const;
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 type SortDir = "asc" | "desc" | null;
 
@@ -19,6 +20,7 @@ const DEFAULT_FILTER: CategoryFilter = { mode: "include", selected: new Set() };
 export default function TransactionList({ transactions, currency }: TransactionListProps) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(10);
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(DEFAULT_FILTER);
 
@@ -59,12 +61,17 @@ export default function TransactionList({ transactions, currency }: TransactionL
     );
   }, [transactions, search, sortDir, categoryFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+    setPage(1);
+  };
+
+  const handlePageSize = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPageSize(Number(e.target.value) as PageSize);
     setPage(1);
   };
 
@@ -146,29 +153,43 @@ export default function TransactionList({ transactions, currency }: TransactionL
         </table>
       )}
 
-      {totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
-          <span>
-            Page {currentPage} of {totalPages}
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Prev
-            </button>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
+      <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4 text-sm text-gray-500 flex-wrap">
+        <div className="flex items-center gap-2">
+          <label htmlFor="page-size" className="whitespace-nowrap">Rows per page</label>
+          <select
+            id="page-size"
+            value={pageSize}
+            onChange={handlePageSize}
+            className="border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          >
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
         </div>
-      )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-3">
+            <span>Page {currentPage} of {totalPages}</span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
