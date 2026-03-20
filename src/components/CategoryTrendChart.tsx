@@ -80,15 +80,15 @@ export default function CategoryTrendChart({ data, currency }: Props) {
 
   // Parent chart data: { period, label, Primary: n, Secondary: n, Excluded: n }
   const parentChartData = useMemo(() => {
-    const byPeriod = new Map<string, Record<string, number>>();
+    const byPeriod = new Map<string, Record<string, unknown>>();
     for (const { period, label } of periods) {
-      byPeriod.set(period, { period, label } as Record<string, number>);
+      byPeriod.set(period, { period, label });
     }
     for (const row of data) {
       const parent = row.parentName ?? "Other";
       const entry = byPeriod.get(row.period);
       if (entry) {
-        entry[parent] = (entry[parent] ?? 0) + row.amount;
+        entry[parent] = ((entry[parent] as number) ?? 0) + row.amount;
       }
     }
     return [...byPeriod.values()];
@@ -108,14 +108,14 @@ export default function CategoryTrendChart({ data, currency }: Props) {
     if (!selected) return { childChartData: [], childKeys: [] };
     const rows = data.filter((r) => (r.parentName ?? "Other") === selected);
     const cats = [...new Set(rows.map((r) => r.categoryName))].sort();
-    const byPeriod = new Map<string, Record<string, number>>();
+    const byPeriod = new Map<string, Record<string, unknown>>();
     for (const { period, label } of periods) {
-      byPeriod.set(period, { period, label } as Record<string, number>);
+      byPeriod.set(period, { period, label });
     }
     for (const row of rows) {
       const entry = byPeriod.get(row.period);
       if (entry) {
-        entry[row.categoryName] = (entry[row.categoryName] ?? 0) + row.amount;
+        entry[row.categoryName] = ((entry[row.categoryName] as number) ?? 0) + row.amount;
       }
     }
     return { childChartData: [...byPeriod.values()], childKeys: cats };
@@ -135,7 +135,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
       <div className="bg-white rounded-2xl p-6 shadow-sm">
         <h2 className="text-base font-semibold text-gray-800 mb-1">Expense trends by category group</h2>
         <p className="text-xs text-gray-400 mb-5">Click a bar or legend label to drill into sub-categories</p>
-        <ResponsiveContainer width="100%" height={300}>
+        <ResponsiveContainer width="100%" height={300} minWidth={0}>
           <BarChart data={parentChartData} margin={{ top: 4, right: 8, bottom: 0, left: 16 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
             <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#6b7280" }} />
@@ -189,7 +189,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
             </button>
           </div>
           <p className="text-xs text-gray-400 mb-5">Click a bar or legend label to highlight a sub-category</p>
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={280} minWidth={0}>
             <BarChart data={childChartData} margin={{ top: 4, right: 8, bottom: 0, left: 16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 12, fill: "#6b7280" }} />

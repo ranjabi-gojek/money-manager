@@ -78,7 +78,7 @@ export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm">
       <h2 className="text-base font-semibold text-gray-800 mb-6">Income vs Expense per Month</h2>
-      <ResponsiveContainer width="100%" height={360}>
+      <ResponsiveContainer width="100%" height={360} minWidth={0}>
         <ComposedChart data={data} margin={{ top: 4, right: 8, bottom: 64, left: 16 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
           <XAxis
