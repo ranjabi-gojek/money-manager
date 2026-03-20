@@ -42,13 +42,14 @@ function CurrencyTooltip({
       {[...payload].reverse().map((e) => {
         const isHighlighted = !highlight || highlight === e.name;
         return (
-          <p
+          <div
             key={e.name}
+            className={`flex items-center justify-between gap-4 mt-0.5 ${isHighlighted && highlight ? "font-semibold" : ""}`}
             style={{ color: e.color, opacity: isHighlighted ? 1 : 0.35 }}
-            className={isHighlighted && highlight ? "font-semibold" : ""}
           >
-            {e.name}: {currency}{e.value.toLocaleString("id-ID")}
-          </p>
+            <span>{e.name}</span>
+            <span className="tabular-nums">{currency}{e.value.toLocaleString("id-ID")}</span>
+          </div>
         );
       })}
     </div>
@@ -155,18 +156,22 @@ export default function CategoryTrendChart({ data, currency }: Props) {
                 </span>
               )}
             />
-            {parentNames.map((name, i) => (
-              <Bar
-                key={name}
-                dataKey={name}
-                stackId="a"
-                fill={PARENT_COLORS[name] ?? CHILD_COLORS[i % CHILD_COLORS.length]}
-                fillOpacity={selected && selected !== name ? 0.2 : 1}
-                cursor="pointer"
-                radius={i === parentNames.length - 1 ? [4, 4, 0, 0] : undefined}
-                onClick={() => { setSelected(selected === name ? null : name); setSelectedChild(null); }}
-              />
-            ))}
+            {parentNames.map((name, i) => {
+              const color = PARENT_COLORS[name] ?? CHILD_COLORS[i % CHILD_COLORS.length];
+              return (
+                <Bar
+                  key={name}
+                  dataKey={name}
+                  stackId="a"
+                  fill={color}
+                  fillOpacity={selected && selected !== name ? 0.2 : 1}
+                  cursor="pointer"
+                  radius={i === parentNames.length - 1 ? [4, 4, 0, 0] : undefined}
+                  activeBar={{ fill: color, fillOpacity: selected && selected !== name ? 0.3 : 0.8, stroke: color, strokeWidth: 1 }}
+                  onClick={() => { setSelected(selected === name ? null : name); setSelectedChild(null); }}
+                />
+              );
+            })}
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -205,18 +210,22 @@ export default function CategoryTrendChart({ data, currency }: Props) {
                   </span>
                 )}
               />
-              {childKeys.map((key, i) => (
-                <Bar
-                  key={key}
-                  dataKey={key}
-                  stackId="b"
-                  fill={CHILD_COLORS[i % CHILD_COLORS.length]}
-                  fillOpacity={selectedChild && selectedChild !== key ? 0.2 : 1}
-                  cursor="pointer"
-                  radius={i === childKeys.length - 1 ? [4, 4, 0, 0] : undefined}
-                  onClick={() => setSelectedChild(selectedChild === key ? null : key)}
-                />
-              ))}
+              {childKeys.map((key, i) => {
+                const color = CHILD_COLORS[i % CHILD_COLORS.length];
+                return (
+                  <Bar
+                    key={key}
+                    dataKey={key}
+                    stackId="b"
+                    fill={color}
+                    fillOpacity={selectedChild && selectedChild !== key ? 0.2 : 1}
+                    cursor="pointer"
+                    radius={i === childKeys.length - 1 ? [4, 4, 0, 0] : undefined}
+                    activeBar={{ fill: color, fillOpacity: selectedChild && selectedChild !== key ? 0.3 : 0.8, stroke: color, strokeWidth: 1 }}
+                    onClick={() => setSelectedChild(selectedChild === key ? null : key)}
+                  />
+                );
+              })}
             </BarChart>
           </ResponsiveContainer>
         </div>

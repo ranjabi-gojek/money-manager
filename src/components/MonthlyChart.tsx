@@ -43,9 +43,10 @@ function CustomTooltip({
     <div className="bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3 text-sm">
       <p className="font-semibold text-gray-800 mb-2">{label}</p>
       {payload.map((entry) => (
-        <p key={entry.name} style={{ color: entry.color }} className="mt-0.5">
-          {entry.name}: {currency}{entry.value.toLocaleString("id-ID")}
-        </p>
+        <div key={entry.name} className="flex items-center justify-between gap-4 mt-0.5" style={{ color: entry.color }}>
+          <span>{entry.name}</span>
+          <span className="tabular-nums">{currency}{entry.value.toLocaleString("id-ID")}</span>
+        </div>
       ))}
     </div>
   );
