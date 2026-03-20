@@ -77,26 +77,29 @@ describe("TransactionList", () => {
   });
 
   describe("amount sorting", () => {
-    it("sorts descending on first click (biggest first)", () => {
+    // transactions: lunch -50k, grab -25k, salary +5M
+    // signed values:  -50000,   -25000,    +5000000
+    // desc (biggest first): salary(+5M), grab(-25k), lunch(-50k)
+    // asc (smallest first): lunch(-50k), grab(-25k), salary(+5M)
+
+    it("sorts descending on first click: income first, then least-negative expense last", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
       fireEvent.click(screen.getByRole("button", { name: /amount/i }));
-      const rows = screen.getAllByRole("row").slice(1); // skip header
-      const amounts = rows.map((r) => r.querySelector("td:last-child")?.textContent ?? "");
-      expect(amounts[0]).toContain("5.000.000");
-      expect(amounts[1]).toContain("50.000");
-      expect(amounts[2]).toContain("25.000");
+      const rows = screen.getAllByRole("row").slice(1);
+      expect(rows[0].textContent).toContain("monthly salary"); // +5M, largest signed
+      expect(rows[1].textContent).toContain("grab");           // -25k > -50k
+      expect(rows[2].textContent).toContain("lunch");          // -50k, smallest signed
     });
 
-    it("sorts ascending on second click (smallest first)", () => {
+    it("sorts ascending on second click: biggest expense first, income last", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
       const btn = screen.getByRole("button", { name: /amount/i });
       fireEvent.click(btn); // desc
       fireEvent.click(btn); // asc
       const rows = screen.getAllByRole("row").slice(1);
-      const amounts = rows.map((r) => r.querySelector("td:last-child")?.textContent ?? "");
-      expect(amounts[0]).toContain("25.000");
-      expect(amounts[1]).toContain("50.000");
-      expect(amounts[2]).toContain("5.000.000");
+      expect(rows[0].textContent).toContain("lunch");          // -50k, smallest signed
+      expect(rows[1].textContent).toContain("grab");           // -25k
+      expect(rows[2].textContent).toContain("monthly salary"); // +5M, largest signed
     });
 
     it("restores original order on third click", () => {

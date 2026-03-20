@@ -29,8 +29,9 @@ export default function TransactionList({ transactions, currency }: TransactionL
       : transactions;
 
     if (!sortDir) return base;
+    const signed = (t: Transaction) => t.type === 0 ? t.amount : -t.amount;
     return [...base].sort((a, b) =>
-      sortDir === "desc" ? b.amount - a.amount : a.amount - b.amount
+      sortDir === "desc" ? signed(b) - signed(a) : signed(a) - signed(b)
     );
   }, [transactions, search, sortDir]);
 
