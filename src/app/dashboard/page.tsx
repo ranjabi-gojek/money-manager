@@ -71,7 +71,7 @@ export default function DashboardPage() {
         <SummaryCards summary={summary} />
 
         {/* Chart + Table side by side on larger screens */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           <SpendingChart data={categorySpending} currency={summary.currency} />
           <CategoryTable data={categorySpending} currency={summary.currency} />
         </div>

@@ -62,9 +62,9 @@ export default function SpendingChart({ data, currency }: SpendingChartProps) {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm">
-      <h2 className="text-base font-semibold text-gray-800 mb-4">Spending by Category</h2>
-      <ResponsiveContainer width="100%" height={280}>
+    <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col h-full">
+      <h2 className="text-base font-semibold text-gray-800 mb-4 shrink-0">Spending by Category</h2>
+      <ResponsiveContainer width="100%" height="100%">
         <BarChart data={top} margin={{ top: 0, right: 0, bottom: 60, left: 10 }}>
           <XAxis
             dataKey="categoryName"
