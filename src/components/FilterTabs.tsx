@@ -22,7 +22,7 @@ export default function FilterTabs({ value, onChange }: FilterTabsProps) {
           role="tab"
           aria-selected={value === opt.value}
           onClick={() => onChange(opt.value)}
-          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors cursor-pointer
             ${value === opt.value
               ? "bg-white text-gray-900 shadow-sm"
               : "text-gray-500 hover:text-gray-700"

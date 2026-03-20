@@ -182,7 +182,7 @@ export default function TransactionList({ transactions, currency, selectedCatego
           {isFiltered && (
             <button
               onClick={resetFilters}
-              className="px-3 py-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors"
+              className="px-3 py-1.5 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer"
             >
               Reset filters
             </button>
@@ -210,7 +210,7 @@ export default function TransactionList({ transactions, currency, selectedCatego
               <th className="px-6 py-3 text-right">
                 <button
                   onClick={cycleSort}
-                  className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors ${sortDir ? "text-indigo-600" : ""}`}
+                  className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors cursor-pointer ${sortDir ? "text-indigo-600" : ""}`}
                 >
                   Amount
                   <SortIcon className="w-3.5 h-3.5" />
@@ -256,14 +256,14 @@ export default function TransactionList({ transactions, currency, selectedCatego
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Prev
               </button>
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 Next
               </button>
