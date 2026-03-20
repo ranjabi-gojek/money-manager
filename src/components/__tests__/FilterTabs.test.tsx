@@ -4,30 +4,27 @@ import FilterTabs from "../FilterTabs";
 
 describe("FilterTabs", () => {
   it("renders all three filter options", () => {
-    render(<FilterTabs value="all" onChange={vi.fn()} />);
-    expect(screen.getByRole("tab", { name: "All Time" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "This Year" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Last Year" })).toBeInTheDocument();
+    render(<FilterTabs value={{ type: "all" }} onChange={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /All/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Year/ })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /Month/ })).toBeInTheDocument();
   });
 
-  it("marks the active tab as selected", () => {
-    render(<FilterTabs value="this_year" onChange={vi.fn()} />);
-    expect(screen.getByRole("tab", { name: "This Year" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByRole("tab", { name: "All Time" })).toHaveAttribute("aria-selected", "false");
+  it("marks the All tab as selected", () => {
+    render(<FilterTabs value={{ type: "all" }} onChange={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /All/ })).toHaveAttribute("aria-selected", "true");
   });
 
-  it("calls onChange with the correct value when a tab is clicked", () => {
+  it("marks the Year tab as selected when filter is yearly", () => {
+    render(<FilterTabs value={{ type: "yearly", year: 2025 }} onChange={vi.fn()} />);
+    expect(screen.getByRole("tab", { name: /Year/ })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: /All/ })).toHaveAttribute("aria-selected", "false");
+  });
+
+  it("calls onChange with all when All tab is clicked", () => {
     const onChange = vi.fn();
-    render(<FilterTabs value="all" onChange={onChange} />);
-    fireEvent.click(screen.getByRole("tab", { name: "Last Year" }));
-    expect(onChange).toHaveBeenCalledWith("last_year");
-  });
-
-  it("does not call onChange when clicking the already active tab", () => {
-    const onChange = vi.fn();
-    render(<FilterTabs value="all" onChange={onChange} />);
-    fireEvent.click(screen.getByRole("tab", { name: "All Time" }));
-    // onChange is still called (tab re-selected) — the parent decides whether to re-render
-    expect(onChange).toHaveBeenCalledWith("all");
+    render(<FilterTabs value={{ type: "yearly", year: 2025 }} onChange={onChange} />);
+    fireEvent.click(screen.getByRole("tab", { name: /All/ }));
+    expect(onChange).toHaveBeenCalledWith({ type: "all" });
   });
 });

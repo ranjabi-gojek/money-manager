@@ -11,18 +11,37 @@ import type {
   DateRange,
 } from "./types";
 
-export function getDateRange(filter: TimeFilter): DateRange | null {
-  const now = new Date();
-  const year = now.getFullYear();
+function fmtDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
-  if (filter === "all") return null;
-  if (filter === "this_year") {
-    return { start: `${year}-01-01`, end: `${year}-12-31` };
+export function getDateRange(filter: TimeFilter): DateRange | null {
+  if (filter.type === "all") return null;
+
+  if (filter.type === "yearly") {
+    return { start: `${filter.year}-01-01`, end: `${filter.year}-12-31` };
   }
-  if (filter === "last_year") {
-    return { start: `${year - 1}-01-01`, end: `${year - 1}-12-31` };
+
+  if (filter.type === "monthly") {
+    const { year, month } = filter;
+    // Billing period "YYYY-MM" starts at billingPeriodStart of the previous calendar month
+    const prevM = month === 1 ? 12 : month - 1;
+    const prevY = month === 1 ? year - 1 : year;
+    const startDate = billingPeriodStart(prevY, prevM);
+    // Period ends the day before the next period's start
+    const endDate = new Date(billingPeriodStart(year, month).getTime() - 86_400_000);
+    return { start: fmtDate(startDate), end: fmtDate(endDate) };
   }
+
   return null;
+}
+
+export function getAvailableYears(db: Database): number[] {
+  const result = db.exec(
+    "SELECT DISTINCT CAST(substr(wdate, 1, 4) AS INTEGER) as yr FROM INOUTCOME WHERE do_type IN (0, 1) ORDER BY yr DESC"
+  );
+  if (!result.length) return [];
+  return result[0].values.map((row) => row[0] as number);
 }
 
 function buildWhereClause(
@@ -66,7 +85,7 @@ export function getCurrencies(db: Database): Record<string, Currency> {
 
 export function getTransactions(
   db: Database,
-  filter: TimeFilter = "all"
+  filter: TimeFilter = { type: "all" }
 ): Transaction[] {
   const range = getDateRange(filter);
   const currencies = getCurrencies(db);
@@ -103,7 +122,7 @@ export function getTransactions(
   }) as Transaction[];
 }
 
-export function getSummary(db: Database, filter: TimeFilter = "all"): Summary {
+export function getSummary(db: Database, filter: TimeFilter = { type: "all" }): Summary {
   const range = getDateRange(filter);
   const currencies = getCurrencies(db);
 
@@ -131,7 +150,7 @@ export function getSummary(db: Database, filter: TimeFilter = "all"): Summary {
 
 export function getCategorySpending(
   db: Database,
-  filter: TimeFilter = "all"
+  filter: TimeFilter = { type: "all" }
 ): CategorySpending[] {
   const range = getDateRange(filter);
   const conditions: string[] = ["i.do_type = 1"];
@@ -196,19 +215,23 @@ function billingPeriodForDate(wdate: string): string {
 
 export function getCategoryMonthlySpending(
   db: Database,
-  filter: TimeFilter = "all"
+  filter: TimeFilter = { type: "all" }
 ): CategoryPeriodSpending[] {
   let sqlWhere = "WHERE i.do_type = 1";
   const params: Record<string, string> = {};
   let targetYear: number | null = null;
 
-  if (filter !== "all") {
-    const now = new Date();
-    const year = now.getFullYear();
-    targetYear = filter === "this_year" ? year : year - 1;
-    params[":start"] = `${targetYear - 1}-12-20`;
-    params[":end"] = `${targetYear}-12-31`;
+  if (filter.type === "yearly") {
+    targetYear = filter.year;
+    params[":start"] = `${filter.year - 1}-12-20`;
+    params[":end"] = `${filter.year}-12-31`;
     sqlWhere += " AND i.wdate BETWEEN :start AND :end";
+  } else if (filter.type === "monthly") {
+    const range = getDateRange(filter)!;
+    params[":start"] = range.start;
+    params[":end"] = range.end;
+    sqlWhere += " AND i.wdate BETWEEN :start AND :end";
+    // SQL range already covers exactly one billing period — no JS period filter needed
   }
 
   const sql = `
@@ -255,7 +278,7 @@ export function getCategoryMonthlySpending(
 
 export function getMonthlyTotals(
   db: Database,
-  filter: TimeFilter = "all"
+  filter: TimeFilter = { type: "all" }
 ): MonthlyTotal[] {
   // Expand the SQL date range to account for billing periods crossing calendar month
   // boundaries (the period for January starts ~Dec 25 of the prior year).
@@ -263,14 +286,17 @@ export function getMonthlyTotals(
   const params: Record<string, string> = {};
   let targetYear: number | null = null;
 
-  if (filter !== "all") {
-    const now = new Date();
-    const year = now.getFullYear();
-    targetYear = filter === "this_year" ? year : year - 1;
-    // Fetch from late-Dec of prior year so the January billing period is captured
-    params[":start"] = `${targetYear - 1}-12-20`;
-    params[":end"] = `${targetYear}-12-31`;
+  if (filter.type === "yearly") {
+    targetYear = filter.year;
+    params[":start"] = `${filter.year - 1}-12-20`;
+    params[":end"] = `${filter.year}-12-31`;
     sqlWhere += " AND i.wdate BETWEEN :start AND :end";
+  } else if (filter.type === "monthly") {
+    const range = getDateRange(filter)!;
+    params[":start"] = range.start;
+    params[":end"] = range.end;
+    sqlWhere += " AND i.wdate BETWEEN :start AND :end";
+    targetYear = filter.year;
   }
 
   const sql = `

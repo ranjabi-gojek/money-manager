@@ -36,7 +36,10 @@ export interface CategorySpending {
   count: number;
 }
 
-export type TimeFilter = "all" | "this_year" | "last_year";
+export type TimeFilter =
+  | { type: "all" }
+  | { type: "yearly"; year: number }
+  | { type: "monthly"; year: number; month: number };
 
 export type CategoryFilterMode = "include" | "exclude";
 

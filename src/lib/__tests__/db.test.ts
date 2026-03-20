@@ -41,19 +41,18 @@ async function buildMockDb(): Promise<Database> {
 
 describe("getDateRange", () => {
   it("returns null for 'all'", () => {
-    expect(getDateRange("all")).toBeNull();
+    expect(getDateRange({ type: "all" })).toBeNull();
   });
 
-  it("returns current year range for 'this_year'", () => {
-    const range = getDateRange("this_year");
-    const year = new Date().getFullYear();
-    expect(range).toEqual({ start: `${year}-01-01`, end: `${year}-12-31` });
+  it("returns correct year range for 'yearly'", () => {
+    const range = getDateRange({ type: "yearly", year: 2025 });
+    expect(range).toEqual({ start: "2025-01-01", end: "2025-12-31" });
   });
 
-  it("returns last year range for 'last_year'", () => {
-    const range = getDateRange("last_year");
-    const year = new Date().getFullYear() - 1;
-    expect(range).toEqual({ start: `${year}-01-01`, end: `${year}-12-31` });
+  it("returns billing period range for 'monthly'", () => {
+    const range = getDateRange({ type: "monthly", year: 2025, month: 3 });
+    expect(range).not.toBeNull();
+    expect(range!.start < range!.end).toBe(true);
   });
 });
 
@@ -75,20 +74,19 @@ describe("db queries", () => {
 
   describe("getTransactions", () => {
     it("returns all income and expense rows (excludes transfers)", () => {
-      const txs = getTransactions(db, "all");
+      const txs = getTransactions(db, { type: "all" });
       // 2 incomes + 4 expenses = 6 (transfer with do_type=3 excluded)
       expect(txs.length).toBe(6);
       expect(txs.every((t) => t.type === 0 || t.type === 1)).toBe(true);
     });
 
-    it("filters by last_year (2024)", () => {
-      // Assumes current year >= 2026; last year = 2025 has 3 transactions
-      const txs = getTransactions(db, "last_year");
-      expect(txs.every((t) => t.date.startsWith("2025"))).toBe(true);
+    it("filters by yearly (2026 — no test data, returns empty)", () => {
+      const txs = getTransactions(db, { type: "yearly", year: 2026 });
+      expect(txs).toEqual([]);
     });
 
     it("attaches category name to each transaction", () => {
-      const txs = getTransactions(db, "all");
+      const txs = getTransactions(db, { type: "all" });
       const foodTx = txs.find((t) => t.note === "Dinner");
       expect(foodTx?.categoryName).toBe("Food");
     });
@@ -96,21 +94,21 @@ describe("db queries", () => {
 
   describe("getSummary", () => {
     it("computes correct totals for all time", () => {
-      const summary = getSummary(db, "all");
+      const summary = getSummary(db, { type: "all" });
       expect(summary.totalIncome).toBe(5000000 + 6000000);
       expect(summary.totalExpense).toBe(50000 + 30000 + 75000 + 20000);
       expect(summary.balance).toBe(summary.totalIncome - summary.totalExpense);
     });
 
     it("uses currency symbol", () => {
-      const summary = getSummary(db, "all");
+      const summary = getSummary(db, { type: "all" });
       expect(summary.currency).toBe("Rp");
     });
   });
 
   describe("getCategorySpending", () => {
     it("returns spending grouped by category (expenses only)", () => {
-      const spending = getCategorySpending(db, "all");
+      const spending = getCategorySpending(db, { type: "all" });
       expect(spending.length).toBe(2);
       const food = spending.find((s) => s.categoryName === "Food");
       expect(food?.total).toBe(50000 + 75000);
@@ -119,35 +117,33 @@ describe("db queries", () => {
     });
 
     it("attaches parent category name", () => {
-      const spending = getCategorySpending(db, "all");
+      const spending = getCategorySpending(db, { type: "all" });
       expect(spending.every((s) => s.parentName === "Primary")).toBe(true);
     });
 
     it("is sorted by parent then total descending", () => {
-      const spending = getCategorySpending(db, "all");
+      const spending = getCategorySpending(db, { type: "all" });
       // Both categories share the same parent (Primary), so within the group
       // Food (125000) should come before Transport (50000)
       expect(spending[0].categoryName).toBe("Food");
       expect(spending[1].categoryName).toBe("Transport");
     });
 
-    it("filters to last_year only", () => {
-      const spending = getCategorySpending(db, "last_year");
-      // 2025: Food 75000, Transport 20000
-      const food = spending.find((s) => s.categoryName === "Food");
-      expect(food?.total).toBe(75000);
+    it("filters to yearly (2026 — no test data, returns empty)", () => {
+      const spending = getCategorySpending(db, { type: "yearly", year: 2026 });
+      expect(spending).toEqual([]);
     });
   });
 
   describe("getCategoryMonthlySpending", () => {
     it("returns only expense rows grouped by billing period and category", () => {
-      const rows = getCategoryMonthlySpending(db, "all");
+      const rows = getCategoryMonthlySpending(db, { type: "all" });
       const periods = [...new Set(rows.map((r) => r.period))].sort();
       expect(periods).toEqual(["2024-06", "2024-07", "2025-03"]);
     });
 
     it("groups amounts correctly per period and category", () => {
-      const rows = getCategoryMonthlySpending(db, "all");
+      const rows = getCategoryMonthlySpending(db, { type: "all" });
       const food2024Jun = rows.find((r) => r.period === "2024-06" && r.categoryName === "Food");
       expect(food2024Jun?.amount).toBe(50000);
       const food2025Mar = rows.find((r) => r.period === "2025-03" && r.categoryName === "Food");
@@ -155,29 +151,28 @@ describe("db queries", () => {
     });
 
     it("attaches parent category name", () => {
-      const rows = getCategoryMonthlySpending(db, "all");
+      const rows = getCategoryMonthlySpending(db, { type: "all" });
       expect(rows.every((r) => r.parentName === "Primary")).toBe(true);
     });
 
     it("attaches human-readable label", () => {
-      const rows = getCategoryMonthlySpending(db, "all");
+      const rows = getCategoryMonthlySpending(db, { type: "all" });
       const jun = rows.find((r) => r.period === "2024-06");
       expect(jun?.label).toBe("Jun 2024");
     });
 
-    it("filters to last_year (2025)", () => {
-      const rows = getCategoryMonthlySpending(db, "last_year");
-      expect(rows.every((r) => r.period.startsWith("2025-"))).toBe(true);
-      expect(rows.length).toBeGreaterThan(0);
+    it("filters to yearly (current year 2026 — no test data)", () => {
+      const rows = getCategoryMonthlySpending(db, { type: "yearly", year: 2026 });
+      expect(rows).toEqual([]);
     });
 
-    it("returns empty array when no data matches filter", () => {
-      const rows = getCategoryMonthlySpending(db, "this_year");
+    it("filters to monthly (current billing period 2026-03 — no test data)", () => {
+      const rows = getCategoryMonthlySpending(db, { type: "monthly", year: 2026, month: 3 });
       expect(rows).toEqual([]);
     });
 
     it("excludes transfer rows (do_type=3)", () => {
-      const rows = getCategoryMonthlySpending(db, "all");
+      const rows = getCategoryMonthlySpending(db, { type: "all" });
       // Transfer on 2025-03-25 should not be included — Food in 2025-03 is 75000 only
       const food2025Mar = rows.find((r) => r.period === "2025-03" && r.categoryName === "Food");
       expect(food2025Mar?.amount).toBe(75000);
@@ -186,7 +181,7 @@ describe("db queries", () => {
 
   describe("getMonthlyTotals (billing periods start on adjusted 25th)", () => {
     it("returns one row per billing period ordered ASC", () => {
-      const rows = getMonthlyTotals(db, "all");
+      const rows = getMonthlyTotals(db, { type: "all" });
       // All test dates are before the 25th of their month so billing periods
       // align with calendar months: 2024-06, 2024-07, 2025-01, 2025-03
       expect(rows.length).toBe(4);
@@ -194,7 +189,7 @@ describe("db queries", () => {
     });
 
     it("correctly pivots income and expense per billing period", () => {
-      const rows = getMonthlyTotals(db, "all");
+      const rows = getMonthlyTotals(db, { type: "all" });
       const jun24 = rows.find((r) => r.month === "2024-06")!;
       expect(jun24.income).toBe(5000000);
       expect(jun24.expense).toBe(50000);
@@ -207,25 +202,24 @@ describe("db queries", () => {
     });
 
     it("excludes transfer rows (do_type=3)", () => {
-      const rows = getMonthlyTotals(db, "all");
+      const rows = getMonthlyTotals(db, { type: "all" });
       const mar25 = rows.find((r) => r.month === "2025-03")!;
       expect(mar25.expense).toBe(95000);
     });
 
     it("attaches a human-readable label", () => {
-      const rows = getMonthlyTotals(db, "all");
+      const rows = getMonthlyTotals(db, { type: "all" });
       const jun24 = rows.find((r) => r.month === "2024-06")!;
       expect(jun24.label).toBe("Jun 2024");
     });
 
-    it("filters to last_year (2025)", () => {
-      const rows = getMonthlyTotals(db, "last_year");
-      expect(rows.every((r) => r.month.startsWith("2025-"))).toBe(true);
-      expect(rows.length).toBe(2);
+    it("filters to yearly (2026 — no test data, returns empty)", () => {
+      const rows = getMonthlyTotals(db, { type: "yearly", year: 2026 });
+      expect(rows).toEqual([]);
     });
 
-    it("returns empty array when no data matches filter", () => {
-      const rows = getMonthlyTotals(db, "this_year");
+    it("filters to monthly (current billing period 2026-03 — no test data, returns empty)", () => {
+      const rows = getMonthlyTotals(db, { type: "monthly", year: 2026, month: 3 });
       expect(rows).toEqual([]);
     });
 

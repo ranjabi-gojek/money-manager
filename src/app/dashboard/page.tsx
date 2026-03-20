@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDb } from "@/context/DbContext";
-import { getTransactions, getSummary, getCategorySpending } from "@/lib/db";
+import { getTransactions, getSummary, getCategorySpending, getAvailableYears } from "@/lib/db";
 import type { TimeFilter, Transaction, Summary, CategorySpending } from "@/lib/types";
 import { Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -16,7 +16,8 @@ import TransactionList from "@/components/TransactionList";
 export default function DashboardPage() {
   const { db, fileName, restoring } = useDb();
   const router = useRouter();
-  const [filter, setFilter] = useState<TimeFilter>("all");
+  const [filter, setFilter] = useState<TimeFilter>({ type: "all" });
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [categorySpending, setCategorySpending] = useState<CategorySpending[]>([]);
@@ -27,6 +28,11 @@ export default function DashboardPage() {
     if (restoring) return;
     if (!db) router.replace("/");
   }, [restoring, db, router]);
+
+  useEffect(() => {
+    if (!db) return;
+    setAvailableYears(getAvailableYears(db));
+  }, [db]);
 
   useEffect(() => {
     if (!db) return;
@@ -55,7 +61,7 @@ export default function DashboardPage() {
         {/* Filter tabs */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-xl font-bold text-gray-900">Spending Overview</h1>
-          <FilterTabs value={filter} onChange={setFilter} />
+          <FilterTabs value={filter} onChange={setFilter} availableYears={availableYears} />
         </div>
 
         {/* Summary cards */}
