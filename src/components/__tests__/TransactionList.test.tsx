@@ -1,7 +1,19 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TransactionList from "../TransactionList";
 import type { Transaction } from "@/lib/types";
+
+// localStorage mock
+const localStorageStore: Record<string, string> = {};
+const localStorageMock: Storage = {
+  getItem: (key) => localStorageStore[key] ?? null,
+  setItem: (key, value) => { localStorageStore[key] = String(value); },
+  removeItem: (key) => { delete localStorageStore[key]; },
+  clear: () => { for (const k of Object.keys(localStorageStore)) delete localStorageStore[k]; },
+  get length() { return Object.keys(localStorageStore).length; },
+  key: (i) => Object.keys(localStorageStore)[i] ?? null,
+};
+vi.stubGlobal("localStorage", localStorageMock);
 
 function makeTx(overrides: Partial<Transaction> & { id: number }): Transaction {
   return {
@@ -23,6 +35,10 @@ const transactions: Transaction[] = [
 ];
 
 describe("TransactionList", () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it("renders all transactions", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
     expect(screen.getByText("lunch")).toBeInTheDocument();
@@ -210,6 +226,55 @@ describe("TransactionList", () => {
       const input = screen.getByPlaceholderText(/Search note or category/i);
       fireEvent.change(input, { target: { value: "zzznomatch" } });
       expect(screen.getByText(/No transactions found/i)).toBeInTheDocument();
+    });
+  });
+
+  describe("filter persistence (localStorage)", () => {
+    it("restores search from localStorage on mount", () => {
+      localStorage.setItem(
+        "tx-filters",
+        JSON.stringify({ search: "grab", pageSize: 10, sortDir: null, categoryFilter: { mode: "include", selected: [] } })
+      );
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const input = screen.getByPlaceholderText(/Search note or category/i) as HTMLInputElement;
+      expect(input.value).toBe("grab");
+      expect(screen.getByText("grab")).toBeInTheDocument();
+      expect(screen.queryByText("lunch")).not.toBeInTheDocument();
+    });
+
+    it("restores pageSize from localStorage on mount", () => {
+      localStorage.setItem(
+        "tx-filters",
+        JSON.stringify({ search: "", pageSize: 20, sortDir: null, categoryFilter: { mode: "include", selected: [] } })
+      );
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const select = screen.getByLabelText(/Rows per page/i) as HTMLSelectElement;
+      expect(select.value).toBe("20");
+    });
+
+    it("restores category filter from localStorage on mount", () => {
+      localStorage.setItem(
+        "tx-filters",
+        JSON.stringify({ search: "", pageSize: 10, sortDir: null, categoryFilter: { mode: "include", selected: ["Food"] } })
+      );
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      expect(screen.getByText("lunch")).toBeInTheDocument();
+      expect(screen.queryByText("grab")).not.toBeInTheDocument();
+    });
+
+    it("saves filters to localStorage when search changes", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const input = screen.getByPlaceholderText(/Search note or category/i);
+      fireEvent.change(input, { target: { value: "lunch" } });
+      const stored = JSON.parse(localStorage.getItem("tx-filters")!);
+      expect(stored.search).toBe("lunch");
+    });
+
+    it("falls back to defaults when localStorage contains invalid JSON", () => {
+      localStorage.setItem("tx-filters", "not-json{{{");
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      const select = screen.getByLabelText(/Rows per page/i) as HTMLSelectElement;
+      expect(select.value).toBe("10");
     });
   });
 });
