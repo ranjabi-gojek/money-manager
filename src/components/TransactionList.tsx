@@ -18,6 +18,12 @@ interface TransactionListProps {
 }
 
 const DEFAULT_FILTER: CategoryFilter = { mode: "include", selected: new Set() };
+
+const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtDate(iso: string): { day: string; rest: string } {
+  const [y, m, d] = iso.split("-").map(Number);
+  return { day: String(d), rest: `${MONTH_ABBR[m - 1]} ${String(y).slice(2)}` };
+}
 const STORAGE_KEY = "tx-filters";
 
 interface StoredFilters {
@@ -222,7 +228,9 @@ export default function TransactionList({ transactions, currency, selectedCatego
             <tbody className="divide-y divide-gray-50">
               {paginated.map((tx) => (
                 <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 sm:px-6 py-3 text-gray-500 whitespace-nowrap">{tx.date}</td>
+                  <td className="px-4 sm:px-6 py-3 text-gray-500 whitespace-nowrap tabular-nums">
+                    {(() => { const { day, rest } = fmtDate(tx.date); return <><span className="inline-block w-5 text-right">{day}</span> {rest}</>; })()}
+                  </td>
                   <td className="px-4 sm:px-6 py-3 text-gray-700">{tx.categoryName}</td>
                   <td className="px-4 sm:px-6 py-3 text-gray-500 max-w-xs truncate">{tx.note || "—"}</td>
                   <td className={`px-4 sm:px-6 py-3 text-right font-medium whitespace-nowrap ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
