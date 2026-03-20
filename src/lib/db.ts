@@ -90,8 +90,8 @@ export function getTransactions(
     return {
       id: row[0] as number,
       date: row[1] as string,
-      type: row[2] as 0 | 1,
-      amount: row[3] as number,
+      type: Number(row[2]) as 0 | 1,
+      amount: Number(row[3]),
       currencyId,
       categoryId: row[5] as string | number,
       categoryName: (row[6] as string) ?? "Uncategorized",
@@ -111,7 +111,7 @@ export function getSummary(db: Database, filter: TimeFilter = "all"): Summary {
     const result = db.exec(sql, params);
     if (!result.length || !result[0].values.length) return { amount: 0, currencyId: "" };
     const row = result[0].values[0];
-    return { amount: (row[0] as number) ?? 0, currencyId: row[1] as string };
+    return { amount: Number(row[0]) || 0, currencyId: row[1] as string };
   };
 
   const income = sumQuery(0);
