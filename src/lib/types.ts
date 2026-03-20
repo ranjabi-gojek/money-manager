@@ -37,6 +37,14 @@ export interface CategorySpending {
 
 export type TimeFilter = "all" | "this_year" | "last_year";
 
+export type CategoryFilterMode = "include" | "exclude";
+
+export interface CategoryFilter {
+  mode: CategoryFilterMode;
+  /** Category names selected for the filter. Empty set = no active filter. */
+  selected: Set<string>;
+}
+
 export interface DateRange {
   start: string;
   end: string;

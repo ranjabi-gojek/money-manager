@@ -115,4 +115,62 @@ describe("TransactionList", () => {
       expect(rows[2].textContent).toContain("monthly salary");
     });
   });
+
+  describe("category filter", () => {
+    const openPopover = () =>
+      fireEvent.click(screen.getByText("Filter categories"));
+
+    it("include mode: shows only selected categories", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      openPopover();
+      fireEvent.click(screen.getByLabelText("Food"));
+      expect(screen.getByText("lunch")).toBeInTheDocument();
+      expect(screen.queryByText("grab")).not.toBeInTheDocument();
+      expect(screen.queryByText("monthly salary")).not.toBeInTheDocument();
+      expect(screen.getByText("(1)")).toBeInTheDocument();
+    });
+
+    it("include mode with multiple categories shows all of them", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      openPopover();
+      fireEvent.click(screen.getByLabelText("Food"));
+      fireEvent.click(screen.getByLabelText("Transport"));
+      expect(screen.getByText("lunch")).toBeInTheDocument();
+      expect(screen.getByText("grab")).toBeInTheDocument();
+      expect(screen.queryByText("monthly salary")).not.toBeInTheDocument();
+      expect(screen.getByText("(2)")).toBeInTheDocument();
+    });
+
+    it("exclude mode: hides selected categories", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      openPopover();
+      fireEvent.click(screen.getByText("Exclude"));
+      fireEvent.click(screen.getByLabelText("Food"));
+      expect(screen.queryByText("lunch")).not.toBeInTheDocument();
+      expect(screen.getByText("grab")).toBeInTheDocument();
+      expect(screen.getByText("monthly salary")).toBeInTheDocument();
+      expect(screen.getByText("(2)")).toBeInTheDocument();
+    });
+
+    it("clear filter restores all transactions", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      openPopover();
+      // Popover is open — select Food; Clear filter appears inside the open popover
+      fireEvent.click(screen.getByLabelText("Food"));
+      expect(screen.getByText("(1)")).toBeInTheDocument();
+      // Clear filter button is visible while popover is still open
+      fireEvent.click(screen.getByText("Clear filter"));
+      expect(screen.getByText("(3)")).toBeInTheDocument();
+    });
+
+    it("category filter composes with text search", () => {
+      render(<TransactionList transactions={transactions} currency="Rp" />);
+      openPopover();
+      fireEvent.click(screen.getByLabelText("Food"));
+      // Now only Food is visible; search within it
+      const input = screen.getByPlaceholderText(/Search note or category/i);
+      fireEvent.change(input, { target: { value: "zzznomatch" } });
+      expect(screen.getByText(/No transactions found/i)).toBeInTheDocument();
+    });
+  });
 });

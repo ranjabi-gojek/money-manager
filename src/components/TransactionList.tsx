@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import type { Transaction } from "@/lib/types";
+import type { Transaction, CategoryFilter } from "@/lib/types";
+import CategoryFilterPopover from "./CategoryFilterPopover";
 
 const PAGE_SIZE = 20;
 
@@ -13,27 +14,50 @@ interface TransactionListProps {
   currency: string;
 }
 
+const DEFAULT_FILTER: CategoryFilter = { mode: "include", selected: new Set() };
+
 export default function TransactionList({ transactions, currency }: TransactionListProps) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(DEFAULT_FILTER);
+
+  // Derive unique sorted category names from all transactions
+  const allCategories = useMemo(
+    () => [...new Set(transactions.map((t) => t.categoryName))].sort(),
+    [transactions]
+  );
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    const base = q
-      ? transactions.filter(
-          (t) =>
-            t.note.toLowerCase().includes(q) ||
-            t.categoryName.toLowerCase().includes(q)
-        )
-      : transactions;
+    const { mode, selected } = categoryFilter;
 
+    let base = transactions;
+
+    // Text search
+    if (q) {
+      base = base.filter(
+        (t) =>
+          t.note.toLowerCase().includes(q) ||
+          t.categoryName.toLowerCase().includes(q)
+      );
+    }
+
+    // Category filter
+    if (selected.size > 0) {
+      base =
+        mode === "include"
+          ? base.filter((t) => selected.has(t.categoryName))
+          : base.filter((t) => !selected.has(t.categoryName));
+    }
+
+    // Sort
     if (!sortDir) return base;
-    const signed = (t: Transaction) => t.type === 0 ? t.amount : -t.amount;
+    const signed = (t: Transaction) => (t.type === 0 ? t.amount : -t.amount);
     return [...base].sort((a, b) =>
       sortDir === "desc" ? signed(b) - signed(a) : signed(a) - signed(b)
     );
-  }, [transactions, search, sortDir]);
+  }, [transactions, search, sortDir, categoryFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -41,6 +65,11 @@ export default function TransactionList({ transactions, currency }: TransactionL
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(e.target.value);
+    setPage(1);
+  };
+
+  const handleCategoryFilter = (f: CategoryFilter) => {
+    setCategoryFilter(f);
     setPage(1);
   };
 
@@ -60,15 +89,22 @@ export default function TransactionList({ transactions, currency }: TransactionL
             ({filtered.length.toLocaleString()})
           </span>
         </h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="search"
-            placeholder="Search note or category…"
-            value={search}
-            onChange={handleSearch}
-            className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"
+        <div className="flex items-center gap-2 flex-wrap">
+          <CategoryFilterPopover
+            categories={allCategories}
+            filter={categoryFilter}
+            onChange={handleCategoryFilter}
           />
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="search"
+              placeholder="Search note or category…"
+              value={search}
+              onChange={handleSearch}
+              className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"
+            />
+          </div>
         </div>
       </div>
 
