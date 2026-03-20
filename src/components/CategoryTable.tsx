@@ -81,18 +81,8 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
                   <td className="px-4 py-2.5 text-right text-gray-900 font-medium truncate">
                     {currency}{row.total.toLocaleString("id-ID")}
                   </td>
-                  <td className="px-4 py-2.5 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <div className="w-10 bg-gray-100 rounded-full h-1.5 overflow-hidden shrink-0">
-                        <div
-                          className="bg-indigo-500 h-full rounded-full"
-                          style={{ width: `${share}%` }}
-                        />
-                      </div>
-                      <span className="text-gray-500 tabular-nums w-[38px] text-right shrink-0">
-                        {share.toFixed(1)}%
-                      </span>
-                    </div>
+                  <td className="px-4 py-2.5 text-right text-gray-500 tabular-nums">
+                    {share.toFixed(1)}%
                   </td>
                 </tr>
               );
