@@ -4,8 +4,8 @@ import CategoryTable from "../CategoryTable";
 import type { CategorySpending } from "@/lib/types";
 
 const mockData: CategorySpending[] = [
-  { categoryName: "Food", total: 1500000, count: 20 },
-  { categoryName: "Transport", total: 500000, count: 10 },
+  { categoryName: "Food", parentName: "Primary", total: 1500000, count: 20 },
+  { categoryName: "Transport", parentName: "Primary", total: 500000, count: 10 },
 ];
 
 describe("CategoryTable", () => {
