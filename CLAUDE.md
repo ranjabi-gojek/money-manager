@@ -50,6 +50,24 @@ jsdom doesn't have IndexedDB. Tests that touch `src/lib/storage.ts` must import 
 | `src/components/CategoryFilterPopover.tsx` | Include/exclude category popover |
 | `public/sql-wasm.wasm` | sql.js WebAssembly binary |
 
+## URL search params
+
+Filters are persisted in the URL so they survive refresh and can be bookmarked/shared.
+
+| Param | Values | Owner |
+|-------|--------|-------|
+| `tf` | `yearly` \| `monthly` (omit for all-time) | `FilterTabs` via page |
+| `year` | e.g. `2026` | `FilterTabs` via page |
+| `month` | `1`–`12` | `FilterTabs` via page |
+| `q` | search text | `TransactionList` |
+| `sort` | `asc` \| `desc` (omit for none) | `TransactionList` |
+| `ps` | page size (omit if default 10) | `TransactionList` |
+| `cat` | comma-separated category names | `TransactionList` |
+| `catMode` | `exclude` (omit if include) | `TransactionList` |
+
+Pages wrap their content in `<Suspense>` (required by Next.js for `useSearchParams`).
+`TransactionList` reads params on mount and writes on every filter change via `router.replace`.
+
 ## Test conventions
 
 - Tests live in `__tests__/` next to the file they test

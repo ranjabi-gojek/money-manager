@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useDb } from "@/context/DbContext";
 import { getTransactions, getSummary, getCategorySpending, getAvailableYears } from "@/lib/db";
 import type { TimeFilter, Transaction, Summary, CategorySpending } from "@/lib/types";
@@ -13,10 +13,25 @@ import SpendingChart from "@/components/SpendingChart";
 import CategoryTable from "@/components/CategoryTable";
 import TransactionList from "@/components/TransactionList";
 
-export default function DashboardPage() {
+function filterFromParams(p: ReturnType<typeof useSearchParams>): TimeFilter {
+  const tf = p.get("tf");
+  if (tf === "monthly") {
+    const year = Number(p.get("year")); const month = Number(p.get("month"));
+    if (year && month >= 1 && month <= 12) return { type: "monthly", year, month };
+  }
+  if (tf === "yearly") {
+    const year = Number(p.get("year"));
+    if (year) return { type: "yearly", year };
+  }
+  return { type: "all" };
+}
+
+function DashboardPage() {
   const { db, fileName, restoring } = useDb();
   const router = useRouter();
-  const [filter, setFilter] = useState<TimeFilter>({ type: "all" });
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [filter, setFilter] = useState<TimeFilter>(() => filterFromParams(searchParams));
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -42,6 +57,20 @@ export default function DashboardPage() {
     setSelectedCategory(null);
   }, [db, filter]);
 
+  const handleFilterChange = (newFilter: TimeFilter) => {
+    setFilter(newFilter);
+    const params = new URLSearchParams(searchParams.toString());
+    if (newFilter.type === "all") {
+      params.delete("tf"); params.delete("year"); params.delete("month");
+    } else if (newFilter.type === "yearly") {
+      params.set("tf", "yearly"); params.set("year", String(newFilter.year)); params.delete("month");
+    } else {
+      params.set("tf", "monthly"); params.set("year", String(newFilter.year)); params.set("month", String(newFilter.month));
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
   const handleCategoryClick = (category: string) =>
     setSelectedCategory((prev) => (prev === category ? null : category));
 
@@ -61,7 +90,7 @@ export default function DashboardPage() {
         {/* Filter tabs */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-xl font-bold text-gray-900">Spending Overview</h1>
-          <FilterTabs value={filter} onChange={setFilter} availableYears={availableYears} />
+          <FilterTabs value={filter} onChange={handleFilterChange} availableYears={availableYears} />
         </div>
 
         {/* Summary cards */}
@@ -78,4 +107,8 @@ export default function DashboardPage() {
       </main>
     </div>
   );
+}
+
+export default function Page() {
+  return <Suspense><DashboardPage /></Suspense>;
 }

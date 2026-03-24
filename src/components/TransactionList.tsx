@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Transaction, CategoryFilter } from "@/lib/types";
 import CategoryFilterPopover from "./CategoryFilterPopover";
@@ -24,12 +25,51 @@ function fmtDate(iso: string): { day: string; rest: string } {
   const [y, m, d] = iso.split("-").map(Number);
   return { day: String(d), rest: `${MONTH_ABBR[m - 1]} ${String(y).slice(2)}` };
 }
+
 export default function TransactionList({ transactions, currency, selectedCategory, onClearSelectedCategory }: TransactionListProps) {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Keep a ref to current searchParams so the sync effect can read latest
+  // params (e.g. tf/year/month set by the page) without depending on them.
+  const searchParamsRef = useRef(searchParams);
+  useEffect(() => { searchParamsRef.current = searchParams; });
+
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<PageSize>(10);
-  const [sortDir, setSortDir] = useState<SortDir>(null);
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(DEFAULT_FILTER);
+  const [pageSize, setPageSize] = useState<PageSize>(() => {
+    const ps = Number(searchParams.get("ps"));
+    return PAGE_SIZE_OPTIONS.includes(ps as PageSize) ? (ps as PageSize) : 10;
+  });
+  const [sortDir, setSortDir] = useState<SortDir>(() => {
+    const s = searchParams.get("sort");
+    return s === "asc" || s === "desc" ? s : null;
+  });
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(() => {
+    const cat = searchParams.get("cat");
+    const mode = searchParams.get("catMode") === "exclude" ? "exclude" : "include";
+    return { mode, selected: cat ? new Set(cat.split(",").filter(Boolean)) : new Set() };
+  });
+
+  // Sync filter state → URL (preserves unrelated params like tf/year/month)
+  useEffect(() => {
+    const params = new URLSearchParams(searchParamsRef.current.toString());
+    if (search) params.set("q", search); else params.delete("q");
+    if (pageSize !== 10) params.set("ps", String(pageSize)); else params.delete("ps");
+    if (sortDir) params.set("sort", sortDir); else params.delete("sort");
+    if (categoryFilter.selected.size > 0) {
+      params.set("cat", [...categoryFilter.selected].join(","));
+      if (categoryFilter.mode === "exclude") params.set("catMode", "exclude");
+      else params.delete("catMode");
+    } else {
+      params.delete("cat");
+      params.delete("catMode");
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, pageSize, sortDir, categoryFilter, pathname, router]);
 
   // Sync external category selection into the category filter (skip initial mount)
   const isMounted = useRef(false);

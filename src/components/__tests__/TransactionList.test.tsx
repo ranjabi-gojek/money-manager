@@ -1,7 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TransactionList from "../TransactionList";
 import type { Transaction } from "@/lib/types";
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ replace: vi.fn() }),
+  usePathname: () => "/dashboard",
+}));
 
 
 function makeTx(overrides: Partial<Transaction> & { id: number }): Transaction {

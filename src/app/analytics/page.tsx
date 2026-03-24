@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useDb } from "@/context/DbContext";
 import { getMonthlyTotals, getSummary, getCategoryMonthlySpending, getAvailableYears } from "@/lib/db";
 import type { MonthlyTotal, CategoryPeriodSpending, TimeFilter } from "@/lib/types";
@@ -11,10 +11,25 @@ import FilterTabs from "@/components/FilterTabs";
 import MonthlyChart from "@/components/MonthlyChart";
 import CategoryTrendChart from "@/components/CategoryTrendChart";
 
-export default function AnalyticsPage() {
+function filterFromParams(p: ReturnType<typeof useSearchParams>): TimeFilter {
+  const tf = p.get("tf");
+  if (tf === "monthly") {
+    const year = Number(p.get("year")); const month = Number(p.get("month"));
+    if (year && month >= 1 && month <= 12) return { type: "monthly", year, month };
+  }
+  if (tf === "yearly") {
+    const year = Number(p.get("year"));
+    if (year) return { type: "yearly", year };
+  }
+  return { type: "all" };
+}
+
+function AnalyticsPage() {
   const { db, fileName, restoring } = useDb();
   const router = useRouter();
-  const [filter, setFilter] = useState<TimeFilter>({ type: "all" });
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [filter, setFilter] = useState<TimeFilter>(() => filterFromParams(searchParams));
   const [availableYears, setAvailableYears] = useState<number[]>([]);
   const [monthlyTotals, setMonthlyTotals] = useState<MonthlyTotal[]>([]);
   const [categorySpending, setCategorySpending] = useState<CategoryPeriodSpending[]>([]);
@@ -37,6 +52,20 @@ export default function AnalyticsPage() {
     setCurrency(getSummary(db, filter).currency);
   }, [db, filter]);
 
+  const handleFilterChange = (newFilter: TimeFilter) => {
+    setFilter(newFilter);
+    const params = new URLSearchParams(searchParams.toString());
+    if (newFilter.type === "all") {
+      params.delete("tf"); params.delete("year"); params.delete("month");
+    } else if (newFilter.type === "yearly") {
+      params.set("tf", "yearly"); params.set("year", String(newFilter.year)); params.delete("month");
+    } else {
+      params.set("tf", "monthly"); params.set("year", String(newFilter.year)); params.set("month", String(newFilter.month));
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  };
+
   if (restoring || !db) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-400">
@@ -51,11 +80,15 @@ export default function AnalyticsPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-xl font-bold text-gray-900">Monthly Trends</h1>
-          <FilterTabs value={filter} onChange={setFilter} availableYears={availableYears} />
+          <FilterTabs value={filter} onChange={handleFilterChange} availableYears={availableYears} />
         </div>
         <MonthlyChart data={monthlyTotals} currency={currency} />
         <CategoryTrendChart data={categorySpending} currency={currency} />
       </main>
     </div>
   );
+}
+
+export default function Page() {
+  return <Suspense><AnalyticsPage /></Suspense>;
 }
