@@ -93,10 +93,10 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
                   <td className="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     {group.parentName ?? "Other"}
                   </td>
-                  <td className="px-4 py-1.5 text-right text-xs font-semibold text-gray-500">
+                  <td className="px-4 py-1.5 text-right text-sm font-semibold text-gray-600 tabular-nums">
                     {currency}{group.subtotal.toLocaleString("id-ID")}
                   </td>
-                  <td className="px-4 py-1.5 text-right text-xs text-gray-400 tabular-nums">
+                  <td className="px-4 py-1.5 text-right text-sm font-medium text-gray-500 tabular-nums">
                     {total > 0 ? ((group.subtotal / total) * 100).toFixed(1) : "0.0"}%
                   </td>
                 </tr>
@@ -110,11 +110,11 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
                       onClick={() => onCategoryClick?.(row.categoryName)}
                       className={`transition-colors divide-y divide-gray-50 ${onCategoryClick ? "cursor-pointer" : ""} ${isSelected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
                     >
-                      <td className="pl-6 pr-4 py-2.5 text-gray-800 truncate">{row.categoryName}</td>
-                      <td className="px-4 py-2.5 text-right text-gray-900 font-medium">
+                      <td className="pl-6 pr-4 py-2.5 text-sm text-gray-500 truncate">{row.categoryName}</td>
+                      <td className="px-4 py-2.5 text-right text-sm font-medium text-gray-500 tabular-nums">
                         {currency}{row.total.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-4 py-2.5 text-right text-gray-500 tabular-nums">
+                      <td className="px-4 py-2.5 text-right text-sm text-gray-400 tabular-nums">
                         {share.toFixed(1)}%
                       </td>
                     </tr>
