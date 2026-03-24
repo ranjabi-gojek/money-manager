@@ -34,8 +34,10 @@ export default function Navbar({ fileName }: NavbarProps) {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
         {/* Logo */}
         <div className="flex items-center gap-2 flex-1">
-          <FileArchive className="w-5 h-5 text-indigo-600 shrink-0" />
-          <span className="font-semibold text-gray-800">Money Manager</span>
+          <Link href="/dashboard" className="flex items-center gap-2 shrink-0 hover:opacity-80 transition-opacity">
+            <FileArchive className="w-5 h-5 text-indigo-600" />
+            <span className="font-semibold text-gray-800">Money Manager</span>
+          </Link>
 
           {/* Desktop nav links */}
           <nav className="hidden sm:flex items-center gap-1 ml-2">
