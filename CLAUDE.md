@@ -68,6 +68,10 @@ Filters are persisted in the URL so they survive refresh and can be bookmarked/s
 Pages wrap their content in `<Suspense>` (required by Next.js for `useSearchParams`).
 `TransactionList` reads params on mount and writes on every filter change via `router.replace`.
 
+## Workflow
+
+After completing any code change task, always run `npm test` and then create a git commit — without waiting to be asked. If tests fail, fix them first.
+
 ## Test conventions
 
 - Tests live in `__tests__/` next to the file they test

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import type { Database } from "sql.js";
-import { saveBackup, loadBackup } from "@/lib/storage";
+import { saveBackup, loadBackup, clearBackup } from "@/lib/storage";
 
 interface DbContextValue {
   db: Database | null;
@@ -11,6 +11,8 @@ interface DbContextValue {
   restoring: boolean;
   /** Parse bytes, persist to IndexedDB, and set the active DB */
   loadDb: (bytes: Uint8Array, fileName: string) => Promise<void>;
+  /** Clear the active DB and remove it from IndexedDB */
+  clearDb: () => void;
 }
 
 const DbContext = createContext<DbContextValue | null>(null);
@@ -50,8 +52,14 @@ export function DbProvider({ children }: { children: ReactNode }) {
     saveBackup(bytes, name).catch(() => {});
   }, []);
 
+  const clearDb = useCallback(() => {
+    setDb(null);
+    setFileName("");
+    clearBackup().catch(() => {});
+  }, []);
+
   return (
-    <DbContext.Provider value={{ db, fileName, restoring, loadDb }}>
+    <DbContext.Provider value={{ db, fileName, restoring, loadDb, clearDb }}>
       {children}
     </DbContext.Provider>
   );

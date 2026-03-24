@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FileArchive, Menu, X } from "lucide-react";
+import { useDb } from "@/context/DbContext";
 
 interface NavbarProps {
   fileName?: string;
@@ -16,7 +17,14 @@ const NAV_LINKS = [
 
 export default function Navbar({ fileName }: NavbarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { clearDb } = useDb();
   const [open, setOpen] = useState(false);
+
+  const handleUpload = () => {
+    clearDb();
+    router.push("/");
+  };
 
   // Close menu on navigation
   useEffect(() => { setOpen(false); }, [pathname]);
@@ -55,9 +63,9 @@ export default function Navbar({ fileName }: NavbarProps) {
           {fileName && (
             <span className="text-sm text-gray-400">{fileName}</span>
           )}
-          <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+          <button onClick={handleUpload} className="text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer">
             Upload another file
-          </Link>
+          </button>
         </div>
 
         {/* Hamburger (mobile only) */}
@@ -93,9 +101,9 @@ export default function Navbar({ fileName }: NavbarProps) {
             {fileName && (
               <span className="text-xs text-gray-400 truncate mr-3">{fileName}</span>
             )}
-            <Link href="/" className="text-sm text-gray-500 hover:text-gray-700 transition-colors shrink-0">
+            <button onClick={handleUpload} className="text-sm text-gray-500 hover:text-gray-700 transition-colors cursor-pointer shrink-0">
               Upload another file
-            </Link>
+            </button>
           </div>
         </div>
       )}
