@@ -74,7 +74,7 @@ export default function CategoryFilterPopover({
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
+        <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-xl shadow-lg z-20 overflow-hidden">
           {/* Mode toggle */}
           <div className="px-4 pt-3 pb-2 border-b border-gray-100">
             <p className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Mode</p>
