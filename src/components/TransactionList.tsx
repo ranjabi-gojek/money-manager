@@ -6,7 +6,8 @@ import { Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Transaction, CategoryFilter } from "@/lib/types";
 import CategoryFilterPopover from "./CategoryFilterPopover";
 
-const PAGE_SIZE_OPTIONS = [10, 15, 20, 50, 100] as const;
+const PAGE_SIZE_OPTIONS = [15, 30, 50, 100] as const;
+const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0];
 type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 type SortDir = "asc" | "desc" | null;
@@ -40,7 +41,7 @@ export default function TransactionList({ transactions, currency, selectedCatego
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(() => {
     const ps = Number(searchParams.get("ps"));
-    return PAGE_SIZE_OPTIONS.includes(ps as PageSize) ? (ps as PageSize) : 10;
+    return PAGE_SIZE_OPTIONS.includes(ps as PageSize) ? (ps as PageSize) : DEFAULT_PAGE_SIZE;
   });
   const [sortDir, setSortDir] = useState<SortDir>(() => {
     const s = searchParams.get("sort");
@@ -56,7 +57,7 @@ export default function TransactionList({ transactions, currency, selectedCatego
   useEffect(() => {
     const params = new URLSearchParams(searchParamsRef.current.toString());
     if (search) params.set("q", search); else params.delete("q");
-    if (pageSize !== 10) params.set("ps", String(pageSize)); else params.delete("ps");
+    if (pageSize !== DEFAULT_PAGE_SIZE) params.set("ps", String(pageSize)); else params.delete("ps");
     if (sortDir) params.set("sort", sortDir); else params.delete("sort");
     if (categoryFilter.selected.size > 0) {
       params.set("cat", [...categoryFilter.selected].join(","));
@@ -144,13 +145,13 @@ export default function TransactionList({ transactions, currency, selectedCatego
     setPage(1);
   };
 
-  const isFiltered = search !== "" || sortDir !== null || categoryFilter.selected.size > 0 || pageSize !== 10;
+  const isFiltered = search !== "" || sortDir !== null || categoryFilter.selected.size > 0 || pageSize !== DEFAULT_PAGE_SIZE;
 
   const resetFilters = () => {
     setSearch("");
     setSortDir(null);
     setCategoryFilter(DEFAULT_FILTER);
-    setPageSize(10);
+    setPageSize(DEFAULT_PAGE_SIZE);
     setPage(1);
     onClearSelectedCategory?.();
   };

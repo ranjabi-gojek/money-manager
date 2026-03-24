@@ -80,7 +80,7 @@ describe("TransactionList", () => {
 
     it("reset button appears when page size differs from default", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
-      fireEvent.change(screen.getByLabelText(/Rows per page/i), { target: { value: "20" } });
+      fireEvent.change(screen.getByLabelText(/Rows per page/i), { target: { value: "30" } });
       expect(screen.getByRole("button", { name: /reset filters/i })).toBeInTheDocument();
     });
 
@@ -116,8 +116,8 @@ describe("TransactionList", () => {
       expect(screen.getByText("lunch")).toBeInTheDocument();
       expect(screen.getByText("grab")).toBeInTheDocument();
       expect(screen.getByText("monthly salary")).toBeInTheDocument();
-      // Page size back to 10
-      expect((screen.getByLabelText(/Rows per page/i) as HTMLSelectElement).value).toBe("10");
+      // Page size back to default (15)
+      expect((screen.getByLabelText(/Rows per page/i) as HTMLSelectElement).value).toBe("15");
       // Button gone
       expect(screen.queryByRole("button", { name: /reset filters/i })).not.toBeInTheDocument();
     });
@@ -136,33 +136,33 @@ describe("TransactionList", () => {
   });
 
   describe("rows per page", () => {
-    it("defaults to 10 rows per page", () => {
+    it("defaults to 15 rows per page", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
       const select = screen.getByLabelText(/Rows per page/i) as HTMLSelectElement;
-      expect(select.value).toBe("10");
+      expect(select.value).toBe("15");
     });
 
-    it("shows all size options (10, 20, 50, 100)", () => {
+    it("shows all size options (15, 30, 50, 100)", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
       const options = Array.from(
         (screen.getByLabelText(/Rows per page/i) as HTMLSelectElement).options
       ).map((o) => o.value);
-      expect(options).toEqual(["10", "15", "20", "50", "100"]);
+      expect(options).toEqual(["15", "30", "50", "100"]);
     });
 
     it("changing page size resets to page 1 and re-paginates", () => {
-      // Build 25 transactions so pagination kicks in at size 10
-      const many = Array.from({ length: 25 }, (_, i) =>
+      // Build 40 transactions so pagination kicks in at size 15
+      const many = Array.from({ length: 40 }, (_, i) =>
         makeTx({ id: i + 1, note: `tx-${i + 1}` })
       );
       render(<TransactionList transactions={many} currency="Rp" />);
 
-      // Default size 10: page 1 of 3
+      // Default size 15: page 1 of 3
       expect(screen.getByText(/Page 1 of 3/i)).toBeInTheDocument();
 
-      // Switch to 20 rows → page 1 of 2
+      // Switch to 30 rows → page 1 of 2
       fireEvent.change(screen.getByLabelText(/Rows per page/i), {
-        target: { value: "20" },
+        target: { value: "30" },
       });
       expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
 
