@@ -70,7 +70,11 @@ Pages wrap their content in `<Suspense>` (required by Next.js for `useSearchPara
 
 ## Workflow
 
-After completing any code change task, always run `npm test` and then create a git commit — without waiting to be asked. If tests fail, fix them first.
+After completing any code change task:
+- Always run `npm test` and `npm build`
+- Make sure current test is not breaking, adjust test accordingly when there's a change in the feature
+- Add another test if new feature introduced
+- Create a git commit — without waiting to be asked. If tests fail, fix them first.
 
 ## Test conventions
 
