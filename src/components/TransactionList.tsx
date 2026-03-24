@@ -199,47 +199,73 @@ export default function TransactionList({ transactions, currency, selectedCatego
           No transactions found
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm table-fixed min-w-[520px]">
-            <colgroup>
-              <col className="w-28" />
-              <col className="w-36" />
-              <col />
-              <col className="w-36" />
-            </colgroup>
-            <thead>
-              <tr className="text-gray-500 text-xs uppercase tracking-wide bg-gray-50">
-                <th className="px-4 sm:px-6 py-3 text-left">Date</th>
-                <th className="px-4 sm:px-6 py-3 text-left">Category</th>
-                <th className="px-4 sm:px-6 py-3 text-left">Note</th>
-                <th className="px-4 sm:px-6 py-3 text-right">
-                  <button
-                    onClick={cycleSort}
-                    className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors cursor-pointer ${sortDir ? "text-indigo-600" : ""}`}
-                  >
-                    Amount
-                    <SortIcon className="w-3.5 h-3.5" />
-                  </button>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paginated.map((tx) => (
-                <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 sm:px-6 py-3 text-gray-500 whitespace-nowrap tabular-nums">
-                    {(() => { const { day, rest } = fmtDate(tx.date); return <><span className="inline-block w-5 text-right">{day}</span> {rest}</>; })()}
-                  </td>
-                  <td className="px-4 sm:px-6 py-3 text-gray-700">{tx.categoryName}</td>
-                  <td className="px-4 sm:px-6 py-3 text-gray-500 max-w-xs truncate">{tx.note || "—"}</td>
-                  <td className={`px-4 sm:px-6 py-3 text-right font-medium whitespace-nowrap ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
-                    {tx.type === 0 ? "+" : "-"}
-                    {currency}{tx.amount.toLocaleString("id-ID")}
-                  </td>
+        <>
+          {/* Mobile card list */}
+          <ul className="sm:hidden divide-y divide-gray-100">
+            {paginated.map((tx) => {
+              const { day, rest } = fmtDate(tx.date);
+              return (
+                <li key={tx.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm text-gray-800 truncate">{tx.categoryName}</p>
+                    <p className="text-sm text-gray-400 truncate">{tx.note || "—"}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className={`text-sm font-medium tabular-nums ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
+                      {tx.type === 0 ? "+" : "-"}{currency}{tx.amount.toLocaleString("id-ID")}
+                    </p>
+                    <p className="text-sm text-gray-400 tabular-nums">
+                      <span className="inline-block w-4 text-right">{day}</span> {rest}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm table-fixed min-w-[520px]">
+              <colgroup>
+                <col className="w-28" />
+                <col className="w-36" />
+                <col />
+                <col className="w-36" />
+              </colgroup>
+              <thead>
+                <tr className="text-gray-500 text-xs uppercase tracking-wide bg-gray-50">
+                  <th className="px-6 py-3 text-left">Date</th>
+                  <th className="px-6 py-3 text-left">Category</th>
+                  <th className="px-6 py-3 text-left">Note</th>
+                  <th className="px-6 py-3 text-right">
+                    <button
+                      onClick={cycleSort}
+                      className={`inline-flex items-center gap-1 ml-auto hover:text-gray-800 transition-colors cursor-pointer ${sortDir ? "text-indigo-600" : ""}`}
+                    >
+                      Amount
+                      <SortIcon className="w-3.5 h-3.5" />
+                    </button>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {paginated.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-3 text-gray-500 whitespace-nowrap tabular-nums">
+                      {(() => { const { day, rest } = fmtDate(tx.date); return <><span className="inline-block w-5 text-right">{day}</span> {rest}</>; })()}
+                    </td>
+                    <td className="px-6 py-3 text-gray-700">{tx.categoryName}</td>
+                    <td className="px-6 py-3 text-gray-500 max-w-xs truncate">{tx.note || "—"}</td>
+                    <td className={`px-6 py-3 text-right font-medium whitespace-nowrap ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
+                      {tx.type === 0 ? "+" : "-"}
+                      {currency}{tx.amount.toLocaleString("id-ID")}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <div className="px-4 sm:px-6 py-4 border-t border-gray-100 flex items-center justify-between gap-4 text-sm text-gray-500 flex-wrap">

@@ -33,9 +33,9 @@ describe("TransactionList", () => {
 
   it("renders all transactions", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
-    expect(screen.getByText("lunch")).toBeInTheDocument();
-    expect(screen.getByText("grab")).toBeInTheDocument();
-    expect(screen.getByText("monthly salary")).toBeInTheDocument();
+    expect(screen.getAllByText("lunch")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("grab")[0]).toBeInTheDocument();
+    expect(screen.getAllByText("monthly salary")[0]).toBeInTheDocument();
   });
 
   it("shows transaction count", () => {
@@ -47,7 +47,7 @@ describe("TransactionList", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
     const input = screen.getByPlaceholderText(/Search note or category/i);
     fireEvent.change(input, { target: { value: "grab" } });
-    expect(screen.getByText("grab")).toBeInTheDocument();
+    expect(screen.getAllByText("grab")[0]).toBeInTheDocument();
     expect(screen.queryByText("lunch")).not.toBeInTheDocument();
     expect(screen.getByText("(1)")).toBeInTheDocument();
   });
@@ -56,19 +56,19 @@ describe("TransactionList", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
     const input = screen.getByPlaceholderText(/Search note or category/i);
     fireEvent.change(input, { target: { value: "transport" } });
-    expect(screen.getByText("grab")).toBeInTheDocument();
+    expect(screen.getAllByText("grab")[0]).toBeInTheDocument();
     expect(screen.queryByText("lunch")).not.toBeInTheDocument();
   });
 
   it("shows income amounts in green with + prefix", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
-    const incomeCell = screen.getByText("+Rp5.000.000");
+    const incomeCell = screen.getAllByText("+Rp5.000.000")[0];
     expect(incomeCell).toHaveClass("text-green-600");
   });
 
   it("shows expense amounts in red with - prefix", () => {
     render(<TransactionList transactions={transactions} currency="Rp" />);
-    const expenseCell = screen.getByText("-Rp50.000");
+    const expenseCell = screen.getAllByText("-Rp50.000")[0];
     expect(expenseCell).toHaveClass("text-red-500");
   });
 
@@ -113,9 +113,9 @@ describe("TransactionList", () => {
       fireEvent.click(screen.getByRole("button", { name: /reset filters/i }));
       // All 3 transactions visible again
       expect(screen.getByText("(3)")).toBeInTheDocument();
-      expect(screen.getByText("lunch")).toBeInTheDocument();
-      expect(screen.getByText("grab")).toBeInTheDocument();
-      expect(screen.getByText("monthly salary")).toBeInTheDocument();
+      expect(screen.getAllByText("lunch")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("grab")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("monthly salary")[0]).toBeInTheDocument();
       // Page size back to default (15)
       expect((screen.getByLabelText(/Rows per page/i) as HTMLSelectElement).value).toBe("15");
       // Button gone
@@ -222,7 +222,7 @@ describe("TransactionList", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
       openPopover();
       fireEvent.click(screen.getByLabelText("Food"));
-      expect(screen.getByText("lunch")).toBeInTheDocument();
+      expect(screen.getAllByText("lunch")[0]).toBeInTheDocument();
       expect(screen.queryByText("grab")).not.toBeInTheDocument();
       expect(screen.queryByText("monthly salary")).not.toBeInTheDocument();
       expect(screen.getByText("(1)")).toBeInTheDocument();
@@ -233,8 +233,8 @@ describe("TransactionList", () => {
       openPopover();
       fireEvent.click(screen.getByLabelText("Food"));
       fireEvent.click(screen.getByLabelText("Transport"));
-      expect(screen.getByText("lunch")).toBeInTheDocument();
-      expect(screen.getByText("grab")).toBeInTheDocument();
+      expect(screen.getAllByText("lunch")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("grab")[0]).toBeInTheDocument();
       expect(screen.queryByText("monthly salary")).not.toBeInTheDocument();
       expect(screen.getByText("(2)")).toBeInTheDocument();
     });
@@ -245,8 +245,8 @@ describe("TransactionList", () => {
       fireEvent.click(screen.getByText("Exclude"));
       fireEvent.click(screen.getByLabelText("Food"));
       expect(screen.queryByText("lunch")).not.toBeInTheDocument();
-      expect(screen.getByText("grab")).toBeInTheDocument();
-      expect(screen.getByText("monthly salary")).toBeInTheDocument();
+      expect(screen.getAllByText("grab")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("monthly salary")[0]).toBeInTheDocument();
       expect(screen.getByText("(2)")).toBeInTheDocument();
     });
 
