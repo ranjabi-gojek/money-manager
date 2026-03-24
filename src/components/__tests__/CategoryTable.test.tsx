@@ -25,10 +25,10 @@ describe("CategoryTable", () => {
     expect(screen.getByText("Total")).toBeInTheDocument();
   });
 
-  it("shows transaction counts", () => {
+  it("does not show transaction counts", () => {
     render(<CategoryTable data={mockData} currency="Rp" />);
-    expect(screen.getByText("20")).toBeInTheDocument();
-    expect(screen.getByText("10")).toBeInTheDocument();
+    expect(screen.queryByText("20")).not.toBeInTheDocument();
+    expect(screen.queryByText("10")).not.toBeInTheDocument();
   });
 
   it("displays share percentages", () => {

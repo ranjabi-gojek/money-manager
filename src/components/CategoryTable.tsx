@@ -56,10 +56,9 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
   // Shared colgroup — must be identical in all three tables
   const Cols = () => (
     <colgroup>
-      <col style={{ width: "44%" }} />
-      <col style={{ width: "12%" }} />
-      <col style={{ width: "28%" }} />
-      <col style={{ width: "16%" }} />
+      <col style={{ width: "46%" }} />
+      <col style={{ width: "33%" }} />
+      <col style={{ width: "21%" }} />
     </colgroup>
   );
 
@@ -76,7 +75,6 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
         <thead>
           <tr className="text-gray-500 text-xs uppercase tracking-wide bg-gray-50">
             <th className="px-4 py-2 text-left">Category</th>
-            <th className="px-4 py-2 text-right">Txns</th>
             <th className="px-4 py-2 text-right">Amount</th>
             <th className="px-4 py-2 text-right">Share</th>
           </tr>
@@ -92,7 +90,7 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
               <Fragment key={`group-${group.parentName}`}>
                 {/* Parent group header */}
                 <tr className="bg-gray-50 border-t border-gray-100">
-                  <td colSpan={2} className="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <td className="px-4 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     {group.parentName ?? "Other"}
                   </td>
                   <td className="px-4 py-1.5 text-right text-xs font-semibold text-gray-500">
@@ -113,7 +111,6 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
                       className={`transition-colors divide-y divide-gray-50 ${onCategoryClick ? "cursor-pointer" : ""} ${isSelected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
                     >
                       <td className="pl-6 pr-4 py-2.5 text-gray-800 truncate">{row.categoryName}</td>
-                      <td className="px-4 py-2.5 text-right text-gray-500">{row.count}</td>
                       <td className="px-4 py-2.5 text-right text-gray-900 font-medium">
                         {currency}{row.total.toLocaleString("id-ID")}
                       </td>
@@ -135,9 +132,6 @@ export default function CategoryTable({ data, currency, selectedCategory, onCate
         <tfoot>
           <tr className="font-semibold text-gray-800 bg-gray-50">
             <td className="px-4 py-2.5">Total</td>
-            <td className="px-4 py-2.5 text-right text-gray-500">
-              {data.reduce((s, c) => s + c.count, 0)}
-            </td>
             <td className="px-4 py-2.5 text-right">
               {currency}{total.toLocaleString("id-ID")}
             </td>
