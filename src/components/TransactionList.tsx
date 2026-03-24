@@ -24,40 +24,12 @@ function fmtDate(iso: string): { day: string; rest: string } {
   const [y, m, d] = iso.split("-").map(Number);
   return { day: String(d), rest: `${MONTH_ABBR[m - 1]} ${String(y).slice(2)}` };
 }
-const STORAGE_KEY = "tx-filters";
-
-interface StoredFilters {
-  search: string;
-  pageSize: PageSize;
-  sortDir: SortDir;
-  categoryFilter: { mode: "include" | "exclude"; selected: string[] };
-}
-
-function loadFilters(): { search: string; pageSize: PageSize; sortDir: SortDir; categoryFilter: CategoryFilter } {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { search: "", pageSize: 10, sortDir: null, categoryFilter: DEFAULT_FILTER };
-    const s: StoredFilters = JSON.parse(raw);
-    return {
-      search: s.search ?? "",
-      pageSize: PAGE_SIZE_OPTIONS.includes(s.pageSize) ? s.pageSize : 10,
-      sortDir: (["asc", "desc", null] as const).includes(s.sortDir) ? s.sortDir : null,
-      categoryFilter: {
-        mode: s.categoryFilter?.mode === "exclude" ? "exclude" : "include",
-        selected: new Set(s.categoryFilter?.selected ?? []),
-      },
-    };
-  } catch {
-    return { search: "", pageSize: 10, sortDir: null, categoryFilter: DEFAULT_FILTER };
-  }
-}
-
 export default function TransactionList({ transactions, currency, selectedCategory, onClearSelectedCategory }: TransactionListProps) {
-  const [search, setSearch] = useState(() => loadFilters().search);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState<PageSize>(() => loadFilters().pageSize);
-  const [sortDir, setSortDir] = useState<SortDir>(() => loadFilters().sortDir);
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(() => loadFilters().categoryFilter);
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const [sortDir, setSortDir] = useState<SortDir>(null);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>(DEFAULT_FILTER);
 
   // Sync external category selection into the category filter (skip initial mount)
   const isMounted = useRef(false);
@@ -70,21 +42,6 @@ export default function TransactionList({ transactions, currency, selectedCatego
     }
     setPage(1);
   }, [selectedCategory]);
-
-  // Persist filters to localStorage whenever they change
-  useEffect(() => {
-    try {
-      const stored: StoredFilters = {
-        search,
-        pageSize,
-        sortDir,
-        categoryFilter: { mode: categoryFilter.mode, selected: [...categoryFilter.selected] },
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
-    } catch {
-      // ignore (e.g. private browsing storage quota)
-    }
-  }, [search, pageSize, sortDir, categoryFilter]);
 
   // Derive unique sorted category names from all transactions
   const allCategories = useMemo(
