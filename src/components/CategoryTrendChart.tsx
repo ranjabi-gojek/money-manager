@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import {
   BarChart, Bar,
   XAxis, YAxis, Tooltip, Legend, CartesianGrid,
@@ -63,7 +62,6 @@ interface Props {
 }
 
 export default function CategoryTrendChart({ data, currency }: Props) {
-  const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
 
@@ -77,8 +75,8 @@ export default function CategoryTrendChart({ data, currency }: Props) {
       cat: categories.join(","),
       sort: "asc",
     });
-    router.push(`/dashboard?${params.toString()}#transactions`);
-  }, [router]);
+    window.open(`/dashboard?${params.toString()}#transactions`, "_blank");
+  }, []);
 
   // Derive ordered periods and parent names
   const periods = useMemo(() => {
