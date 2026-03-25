@@ -207,8 +207,8 @@ export default function TransactionList({ transactions, currency, selectedCatego
               return (
                 <li key={tx.id} className="px-4 py-2.5 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm text-gray-800 truncate">{tx.categoryName}</p>
-                    <p className="text-sm text-gray-400 truncate">{tx.note || "—"}</p>
+                    <p className="text-sm text-gray-700 truncate">{tx.note || "—"}</p>
+                    <p className="text-sm text-gray-400 truncate pt-1">{tx.categoryName}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-medium tabular-nums ${tx.type === 0 ? "text-green-600" : "text-red-500"}`}>
