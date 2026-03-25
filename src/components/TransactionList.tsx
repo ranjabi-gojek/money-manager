@@ -173,6 +173,13 @@ export default function TransactionList({ transactions, currency, selectedCatego
             filter={categoryFilter}
             onChange={handleCategoryFilter}
           />
+          <button
+            onClick={cycleSort}
+            className={`sm:hidden inline-flex items-center gap-1 px-3 py-1.5 text-sm border rounded-lg transition-colors cursor-pointer ${sortDir ? "border-indigo-400 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600 hover:border-gray-300 hover:text-gray-800"}`}
+          >
+            Amount
+            <SortIcon className="w-3.5 h-3.5" />
+          </button>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input

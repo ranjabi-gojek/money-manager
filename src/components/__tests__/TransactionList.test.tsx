@@ -92,7 +92,7 @@ describe("TransactionList", () => {
 
     it("reset button appears when sort is active", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
-      fireEvent.click(screen.getByRole("button", { name: /amount/i }));
+      fireEvent.click(screen.getAllByRole("button", { name: /amount/i })[0]);
       expect(screen.getByRole("button", { name: /reset filters/i })).toBeInTheDocument();
     });
 
@@ -107,7 +107,7 @@ describe("TransactionList", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
       // Apply multiple filters
       fireEvent.change(screen.getByPlaceholderText(/Search note or category/i), { target: { value: "grab" } });
-      fireEvent.click(screen.getByRole("button", { name: /amount/i }));
+      fireEvent.click(screen.getAllByRole("button", { name: /amount/i })[0]);
       fireEvent.change(screen.getByLabelText(/Rows per page/i), { target: { value: "50" } });
       // Reset
       fireEvent.click(screen.getByRole("button", { name: /reset filters/i }));
@@ -182,7 +182,7 @@ describe("TransactionList", () => {
 
     it("sorts descending on first click: income first, then least-negative expense last", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
-      fireEvent.click(screen.getByRole("button", { name: /amount/i }));
+      fireEvent.click(screen.getAllByRole("button", { name: /amount/i })[0]);
       const rows = screen.getAllByRole("row").slice(1);
       expect(rows[0].textContent).toContain("monthly salary"); // +5M, largest signed
       expect(rows[1].textContent).toContain("grab");           // -25k > -50k
@@ -191,7 +191,7 @@ describe("TransactionList", () => {
 
     it("sorts ascending on second click: biggest expense first, income last", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
-      const btn = screen.getByRole("button", { name: /amount/i });
+      const btn = screen.getAllByRole("button", { name: /amount/i })[0];
       fireEvent.click(btn); // desc
       fireEvent.click(btn); // asc
       const rows = screen.getAllByRole("row").slice(1);
@@ -202,7 +202,7 @@ describe("TransactionList", () => {
 
     it("restores original order on third click", () => {
       render(<TransactionList transactions={transactions} currency="Rp" />);
-      const btn = screen.getByRole("button", { name: /amount/i });
+      const btn = screen.getAllByRole("button", { name: /amount/i })[0];
       fireEvent.click(btn); // desc
       fireEvent.click(btn); // asc
       fireEvent.click(btn); // reset
