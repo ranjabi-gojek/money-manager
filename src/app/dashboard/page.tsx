@@ -71,6 +71,14 @@ function DashboardPage() {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   };
 
+  // Scroll to transactions section after data loads when navigated via hash
+  useEffect(() => {
+    if (!summary) return;
+    if (window.location.hash === "#transactions") {
+      document.getElementById("transactions")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [summary]);
+
   const handleCategoryClick = (category: string) =>
     setSelectedCategory((prev) => (prev === category ? null : category));
 
@@ -103,7 +111,9 @@ function DashboardPage() {
         </div>
 
         {/* Transaction list */}
-        <TransactionList transactions={transactions} currency={summary.currency} selectedCategory={selectedCategory} onClearSelectedCategory={() => setSelectedCategory(null)} />
+        <div id="transactions">
+          <TransactionList transactions={transactions} currency={summary.currency} selectedCategory={selectedCategory} onClearSelectedCategory={() => setSelectedCategory(null)} />
+        </div>
       </main>
     </div>
   );

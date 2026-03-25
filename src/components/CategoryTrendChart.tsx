@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   BarChart, Bar,
   XAxis, YAxis, Tooltip, Legend, CartesianGrid,
@@ -62,8 +63,22 @@ interface Props {
 }
 
 export default function CategoryTrendChart({ data, currency }: Props) {
+  const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
+
+  const navigateToDashboard = useCallback((period: string, categories: string[]) => {
+    if (!categories.length) return;
+    const [y, m] = period.split("-").map(Number);
+    const params = new URLSearchParams({
+      tf: "monthly",
+      year: String(y),
+      month: String(m),
+      cat: categories.join(","),
+      sort: "asc",
+    });
+    router.push(`/dashboard?${params.toString()}#transactions`);
+  }, [router]);
 
   // Derive ordered periods and parent names
   const periods = useMemo(() => {
@@ -202,8 +217,15 @@ export default function CategoryTrendChart({ data, currency }: Props) {
                     {periods.map(({ period }) => {
                       const entry = parentChartData.find((d) => d.period === period);
                       const v = (entry?.[name] as number) ?? 0;
+                      const cats = data.filter((r) => (r.parentName ?? "Other") === name).map((r) => r.categoryName);
+                      const uniqueCats = [...new Set(cats)];
                       return (
-                        <td key={period} className="text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap" style={{ color }}>
+                        <td
+                          key={period}
+                          className={`text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap ${v ? "cursor-pointer hover:opacity-70" : ""}`}
+                          style={{ color }}
+                          onClick={() => v && navigateToDashboard(period, uniqueCats)}
+                        >
                           {v ? `${currency}${fmt(v)}` : "—"}
                         </td>
                       );
@@ -297,7 +319,12 @@ export default function CategoryTrendChart({ data, currency }: Props) {
                         const entry = childChartData.find((d) => d.period === period);
                         const v = (entry?.[key] as number) ?? 0;
                         return (
-                          <td key={period} className="text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap" style={{ color }}>
+                          <td
+                            key={period}
+                            className={`text-center px-2 py-1.5 font-medium tabular-nums whitespace-nowrap ${v ? "cursor-pointer hover:opacity-70" : ""}`}
+                            style={{ color }}
+                            onClick={() => v && navigateToDashboard(period, [key])}
+                          >
                             {v ? `${currency}${fmt(v)}` : "—"}
                           </td>
                         );
