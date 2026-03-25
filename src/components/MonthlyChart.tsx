@@ -112,7 +112,7 @@ export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr>
-              <th className="text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-16" />
+              <th className="sticky left-0 bg-white z-10 text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-16" />
               {data.map((r) => (
                 <th key={r.month} className="text-center text-gray-400 font-normal px-2 py-1 whitespace-nowrap">
                   {r.label}
@@ -123,7 +123,7 @@ export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
           <tbody>
             {LEGEND_META.map(({ key, label, color }) => (
               <tr key={key} className="border-t border-gray-100">
-                <td className="pr-4 py-1.5 whitespace-nowrap">
+                <td className="sticky left-0 bg-white z-10 pr-4 py-1.5 whitespace-nowrap">
                   <span className="flex items-center gap-1.5">
                     <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
                     <span className="text-gray-500">{label}</span>
@@ -144,7 +144,7 @@ export default function MonthlyChart({ data, currency }: MonthlyChartProps) {
               </tr>
             ))}
             <tr className="border-t border-gray-100">
-              <td className="pr-4 py-1.5 whitespace-nowrap">
+              <td className="sticky left-0 bg-white z-10 pr-4 py-1.5 whitespace-nowrap">
                 <span className="flex items-center gap-1.5">
                   <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0 bg-gray-300" />
                   <span className="text-gray-500">Saving rate</span>

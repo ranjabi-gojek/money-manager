@@ -193,7 +193,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr>
-                <th className="text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-24" />
+                <th className="sticky left-0 bg-white z-10 text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-24" />
                 {periods.map(({ period, label }) => (
                   <th key={period} className="text-center text-gray-400 font-normal px-2 py-1 whitespace-nowrap">
                     {label}
@@ -206,7 +206,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
                 const color = PARENT_COLORS[name] ?? CHILD_COLORS[i % CHILD_COLORS.length];
                 return (
                   <tr key={name} className="border-t border-gray-100">
-                    <td className="pr-4 py-1.5 whitespace-nowrap">
+                    <td className="sticky left-0 bg-white z-10 pr-4 py-1.5 whitespace-nowrap">
                       <span className="flex items-center gap-1.5">
                         <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
                         <span className="text-gray-500">{name}</span>
@@ -294,7 +294,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr>
-                  <th className="text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-24" />
+                  <th className="sticky left-0 bg-white z-10 text-left text-gray-400 font-normal pr-4 py-1 whitespace-nowrap w-24" />
                   {periods.map(({ period, label }) => (
                     <th key={period} className="text-center text-gray-400 font-normal px-2 py-1 whitespace-nowrap">
                       {label}
@@ -307,7 +307,7 @@ export default function CategoryTrendChart({ data, currency }: Props) {
                   const color = CHILD_COLORS[i % CHILD_COLORS.length];
                   return (
                     <tr key={key} className="border-t border-gray-100">
-                      <td className="pr-4 py-1.5 whitespace-nowrap">
+                      <td className="sticky left-0 bg-white z-10 pr-4 py-1.5 whitespace-nowrap">
                         <span className="flex items-center gap-1.5">
                           <span className="inline-block w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
                           <span className="text-gray-500">{key}</span>
