@@ -69,3 +69,16 @@ export interface CategoryPeriodSpending {
   categoryName: string;
   amount: number;
 }
+
+export interface TopExpenseItem {
+  date: string;
+  amount: number;
+  categoryName: string;
+  note: string;
+}
+
+export interface TopMonthlyExpense {
+  month: string;   // "YYYY-MM"
+  label: string;   // "Jan 2024"
+  expenses: TopExpenseItem[];
+}

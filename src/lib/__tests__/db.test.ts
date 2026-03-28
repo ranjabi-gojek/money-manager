@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import initSqlJs from "sql.js";
-import { getDateRange, getTransactions, getSummary, getCategorySpending, getCategories, getMonthlyTotals, getCategoryMonthlySpending } from "../db";
+import { getDateRange, getTransactions, getSummary, getCategorySpending, getCategories, getMonthlyTotals, getCategoryMonthlySpending, getTopMonthlyExpenses } from "../db";
 import type { Database } from "sql.js";
 
 // Build an in-memory SQLite DB that mimics the .mmbak schema
@@ -240,6 +240,73 @@ describe("db queries", () => {
       const feb = rows.find((r) => r.month === "2025-02");
       expect(jan?.expense).toBe(1000);   // only the Jan 23 transaction
       expect(feb?.expense).toBe(5000);   // Jan 24 + Jan 25 roll into Feb billing period
+    });
+  });
+
+  describe("getTopMonthlyExpenses", () => {
+    it("returns newest billing period first", () => {
+      const rows = getTopMonthlyExpenses(db, 5);
+      expect(rows[0].month).toBe("2025-03");
+      expect(rows[rows.length - 1].month).toBe("2024-06");
+    });
+
+    it("sorts expenses within each period by amount descending", () => {
+      const rows = getTopMonthlyExpenses(db, 5);
+      const mar25 = rows.find((r) => r.month === "2025-03")!;
+      expect(mar25.expenses[0].amount).toBe(75000);  // Food
+      expect(mar25.expenses[1].amount).toBe(20000);  // Transport
+    });
+
+    it("respects topN limit", () => {
+      const rows = getTopMonthlyExpenses(db, 1);
+      for (const row of rows) {
+        expect(row.expenses.length).toBeLessThanOrEqual(1);
+      }
+      const mar25 = rows.find((r) => r.month === "2025-03")!;
+      expect(mar25.expenses[0].amount).toBe(75000);
+    });
+
+    it("groups transactions into correct billing periods", () => {
+      const rows = getTopMonthlyExpenses(db, 5);
+      const periods = rows.map((r) => r.month);
+      expect(periods).toContain("2024-06");
+      expect(periods).toContain("2024-07");
+      expect(periods).toContain("2025-03");
+    });
+
+    it("attaches correct expense fields", () => {
+      const rows = getTopMonthlyExpenses(db, 5);
+      const jun24 = rows.find((r) => r.month === "2024-06")!;
+      expect(jun24.expenses[0]).toMatchObject({
+        amount: 50000,
+        categoryName: "Food",
+        note: "Lunch",
+        date: "2024-06-15",
+      });
+    });
+
+    it("attaches a human-readable label", () => {
+      const rows = getTopMonthlyExpenses(db, 5);
+      const jun24 = rows.find((r) => r.month === "2024-06")!;
+      expect(jun24.label).toBe("Jun 2024");
+    });
+
+    it("excludes income and transfer rows", () => {
+      const rows = getTopMonthlyExpenses(db, 5);
+      for (const row of rows) {
+        for (const exp of row.expenses) {
+          expect(exp.amount).toBeGreaterThan(0);
+        }
+      }
+      // 2025-01 had only income — should not appear
+      expect(rows.find((r) => r.month === "2025-01")).toBeUndefined();
+    });
+
+    it("uses default topN of 5 when not specified", () => {
+      const rows = getTopMonthlyExpenses(db);
+      for (const row of rows) {
+        expect(row.expenses.length).toBeLessThanOrEqual(5);
+      }
     });
   });
 });

@@ -9,6 +9,8 @@ import type {
   MonthlyTotal,
   TimeFilter,
   DateRange,
+  TopMonthlyExpense,
+  TopExpenseItem,
 } from "./types";
 
 function fmtDate(d: Date): string {
@@ -274,6 +276,45 @@ export function getCategoryMonthlySpending(
     const [period, categoryName] = key.split("::");
     return { period, label: periodLabels.get(period)!, parentName, categoryName, amount };
   });
+}
+
+export function getTopMonthlyExpenses(db: Database, topN: number = 5): TopMonthlyExpense[] {
+  const sql = `
+    SELECT i.wdate, i.AMOUNT_ACCOUNT, c.NAME, i.ZCONTENT
+    FROM INOUTCOME i
+    JOIN ZCATEGORY c ON c.uid = i.ctgUid
+    WHERE i.do_type = 1
+    ORDER BY i.wdate ASC
+  `;
+
+  const result = db.exec(sql);
+  if (!result.length) return [];
+
+  const groups = new Map<string, TopExpenseItem[]>();
+  const periodLabels = new Map<string, string>();
+
+  for (const row of result[0].values) {
+    const wdate = row[0] as string;
+    const amount = Number(row[1]) || 0;
+    const categoryName = (row[2] as string) ?? "Uncategorized";
+    const note = (row[3] as string) ?? "";
+    const period = billingPeriodForDate(wdate);
+
+    if (!groups.has(period)) {
+      groups.set(period, []);
+      const [y, mo] = period.split("-").map(Number);
+      periodLabels.set(period, new Date(y, mo - 1, 1).toLocaleDateString("en-US", { month: "short", year: "numeric" }));
+    }
+    groups.get(period)!.push({ date: wdate, amount, categoryName, note });
+  }
+
+  return [...groups.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([month, items]) => ({
+      month,
+      label: periodLabels.get(month)!,
+      expenses: items.sort((a, b) => b.amount - a.amount).slice(0, topN),
+    }));
 }
 
 export function getMonthlyTotals(

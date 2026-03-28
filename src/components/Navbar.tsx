@@ -13,6 +13,7 @@ interface NavbarProps {
 const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/analytics", label: "Analytics" },
+  { href: "/top-expenses", label: "Top Monthly Expenses" },
 ];
 
 export default function Navbar({ fileName }: NavbarProps) {
