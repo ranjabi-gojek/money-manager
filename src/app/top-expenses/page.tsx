@@ -8,6 +8,12 @@ import type { TopMonthlyExpense } from "@/lib/types";
 import { Loader2, Minus, Plus } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
+const MONTH_ABBR = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function fmtDate(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return `${d} ${MONTH_ABBR[m - 1]} ${String(y).slice(2)}`;
+}
+
 const DEFAULT_N = 5;
 const MIN_N = 1;
 const MAX_N = 10;
@@ -93,11 +99,38 @@ function TopExpensesPage() {
                 <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
                   <h2 className="text-sm font-semibold text-gray-700">{label}</h2>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
+                {/* Mobile card list */}
+                <ul className="sm:hidden divide-y divide-gray-100">
+                  {expenses.map((exp, i) => (
+                    <li key={i} className="px-4 py-2.5 flex items-center gap-3">
+                      <span className="text-xs text-gray-300 font-mono w-4 shrink-0 text-right">{i + 1}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-700 truncate">{exp.note || "—"}</p>
+                        <p className="text-sm text-gray-400 truncate pt-0.5">{exp.categoryName}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="text-sm font-medium text-red-600 tabular-nums whitespace-nowrap">
+                          {currency}{exp.amount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-400 tabular-nums pt-0.5">{fmtDate(exp.date)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-sm table-fixed min-w-[480px]">
+                    <colgroup>
+                      <col className="w-8" />
+                      <col className="w-28" />
+                      <col className="w-36" />
+                      <col />
+                      <col className="w-36" />
+                    </colgroup>
                     <thead>
                       <tr className="text-left text-xs text-gray-400 border-b border-gray-100">
-                        <th className="px-5 py-2 w-8">#</th>
+                        <th className="px-5 py-2">#</th>
                         <th className="px-5 py-2">Date</th>
                         <th className="px-5 py-2">Category</th>
                         <th className="px-5 py-2">Note</th>
@@ -106,15 +139,12 @@ function TopExpensesPage() {
                     </thead>
                     <tbody>
                       {expenses.map((exp, i) => (
-                        <tr
-                          key={i}
-                          className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-5 py-2.5 text-gray-400 font-mono text-xs">{i + 1}</td>
-                          <td className="px-5 py-2.5 text-gray-500 whitespace-nowrap">{exp.date}</td>
+                        <tr key={i} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+                          <td className="px-5 py-2.5 text-gray-300 font-mono text-xs">{i + 1}</td>
+                          <td className="px-5 py-2.5 text-gray-500 whitespace-nowrap tabular-nums">{fmtDate(exp.date)}</td>
                           <td className="px-5 py-2.5 text-gray-700">{exp.categoryName}</td>
-                          <td className="px-5 py-2.5 text-gray-500 max-w-xs truncate">{exp.note || "—"}</td>
-                          <td className="px-5 py-2.5 text-right font-medium text-red-600 whitespace-nowrap">
+                          <td className="px-5 py-2.5 text-gray-500 truncate">{exp.note || "—"}</td>
+                          <td className="px-5 py-2.5 text-right font-medium text-red-600 whitespace-nowrap tabular-nums">
                             {currency}{exp.amount.toLocaleString()}
                           </td>
                         </tr>
